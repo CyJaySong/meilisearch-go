@@ -1,15 +1,20 @@
 package meilisearch
 
 import (
-	"testing"
-
+	"crypto/tls"
 	"github.com/stretchr/testify/require"
+	"testing"
 )
 
 func TestIndex_GetFilterableAttributes(t *testing.T) {
+	meili := setup(t, "")
+	customMeili := setup(t, "", WithCustomClientWithTLS(&tls.Config{
+		InsecureSkipVerify: true,
+	}))
+
 	type args struct {
 		UID    string
-		client *Client
+		client ServiceManager
 	}
 	tests := []struct {
 		name string
@@ -19,20 +24,20 @@ func TestIndex_GetFilterableAttributes(t *testing.T) {
 			name: "TestIndexBasicGetFilterableAttributes",
 			args: args{
 				UID:    "indexUID",
-				client: defaultClient,
+				client: meili,
 			},
 		},
 		{
 			name: "TestIndexGetFilterableAttributesWithCustomClient",
 			args: args{
 				UID:    "indexUID",
-				client: customClient,
+				client: customMeili,
 			},
 		},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			SetUpIndexForFaceting()
+			setUpIndexForFaceting(tt.args.client)
 			c := tt.args.client
 			i := c.Index(tt.args.UID)
 			t.Cleanup(cleanup(c))
@@ -45,9 +50,14 @@ func TestIndex_GetFilterableAttributes(t *testing.T) {
 }
 
 func TestIndex_GetDisplayedAttributes(t *testing.T) {
+	meili := setup(t, "")
+	customMeili := setup(t, "", WithCustomClientWithTLS(&tls.Config{
+		InsecureSkipVerify: true,
+	}))
+
 	type args struct {
 		UID    string
-		client *Client
+		client ServiceManager
 	}
 	tests := []struct {
 		name     string
@@ -58,7 +68,7 @@ func TestIndex_GetDisplayedAttributes(t *testing.T) {
 			name: "TestIndexBasicGetDisplayedAttributes",
 			args: args{
 				UID:    "indexUID",
-				client: defaultClient,
+				client: meili,
 			},
 			wantResp: &[]string{"*"},
 		},
@@ -66,14 +76,14 @@ func TestIndex_GetDisplayedAttributes(t *testing.T) {
 			name: "TestIndexGetDisplayedAttributesWithCustomClient",
 			args: args{
 				UID:    "indexUID",
-				client: customClient,
+				client: customMeili,
 			},
 			wantResp: &[]string{"*"},
 		},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			SetUpIndexForFaceting()
+			setUpIndexForFaceting(tt.args.client)
 			c := tt.args.client
 			i := c.Index(tt.args.UID)
 			t.Cleanup(cleanup(c))
@@ -86,9 +96,11 @@ func TestIndex_GetDisplayedAttributes(t *testing.T) {
 }
 
 func TestIndex_GetDistinctAttribute(t *testing.T) {
+	meili := setup(t, "")
+
 	type args struct {
 		UID    string
-		client *Client
+		client ServiceManager
 	}
 	tests := []struct {
 		name string
@@ -98,20 +110,20 @@ func TestIndex_GetDistinctAttribute(t *testing.T) {
 			name: "TestIndexBasicGetDistinctAttribute",
 			args: args{
 				UID:    "indexUID",
-				client: defaultClient,
+				client: meili,
 			},
 		},
 		{
 			name: "TestIndexBasicGetDistinctAttribute",
 			args: args{
 				UID:    "indexUID",
-				client: defaultClient,
+				client: meili,
 			},
 		},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			SetUpIndexForFaceting()
+			setUpIndexForFaceting(tt.args.client)
 			c := tt.args.client
 			i := c.Index(tt.args.UID)
 			t.Cleanup(cleanup(c))
@@ -124,9 +136,11 @@ func TestIndex_GetDistinctAttribute(t *testing.T) {
 }
 
 func TestIndex_GetRankingRules(t *testing.T) {
+	meili := setup(t, "")
+
 	type args struct {
 		UID    string
-		client *Client
+		client ServiceManager
 	}
 	tests := []struct {
 		name     string
@@ -137,7 +151,7 @@ func TestIndex_GetRankingRules(t *testing.T) {
 			name: "TestIndexBasicGetRankingRules",
 			args: args{
 				UID:    "indexUID",
-				client: defaultClient,
+				client: meili,
 			},
 			wantResp: &defaultRankingRules,
 		},
@@ -145,14 +159,14 @@ func TestIndex_GetRankingRules(t *testing.T) {
 			name: "TestIndexGetRankingRulesWithCustomClient",
 			args: args{
 				UID:    "indexUID",
-				client: defaultClient,
+				client: meili,
 			},
 			wantResp: &defaultRankingRules,
 		},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			SetUpIndexForFaceting()
+			setUpIndexForFaceting(tt.args.client)
 			c := tt.args.client
 			i := c.Index(tt.args.UID)
 			t.Cleanup(cleanup(c))
@@ -165,9 +179,11 @@ func TestIndex_GetRankingRules(t *testing.T) {
 }
 
 func TestIndex_GetSearchableAttributes(t *testing.T) {
+	meili := setup(t, "")
+
 	type args struct {
 		UID    string
-		client *Client
+		client ServiceManager
 	}
 	tests := []struct {
 		name     string
@@ -178,7 +194,7 @@ func TestIndex_GetSearchableAttributes(t *testing.T) {
 			name: "TestIndexBasicGetSearchableAttributes",
 			args: args{
 				UID:    "indexUID",
-				client: defaultClient,
+				client: meili,
 			},
 			wantResp: &[]string{"*"},
 		},
@@ -186,14 +202,14 @@ func TestIndex_GetSearchableAttributes(t *testing.T) {
 			name: "TestIndexGetSearchableAttributesCustomClient",
 			args: args{
 				UID:    "indexUID",
-				client: defaultClient,
+				client: meili,
 			},
 			wantResp: &[]string{"*"},
 		},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			SetUpIndexForFaceting()
+			setUpIndexForFaceting(tt.args.client)
 			c := tt.args.client
 			i := c.Index(tt.args.UID)
 			t.Cleanup(cleanup(c))
@@ -206,9 +222,14 @@ func TestIndex_GetSearchableAttributes(t *testing.T) {
 }
 
 func TestIndex_GetSettings(t *testing.T) {
+	meili := setup(t, "")
+	customMeili := setup(t, "", WithCustomClientWithTLS(&tls.Config{
+		InsecureSkipVerify: true,
+	}))
+
 	type args struct {
 		UID    string
-		client *Client
+		client ServiceManager
 	}
 	tests := []struct {
 		name     string
@@ -219,12 +240,14 @@ func TestIndex_GetSettings(t *testing.T) {
 			name: "TestIndexBasicGetSettings",
 			args: args{
 				UID:    "indexUID",
-				client: defaultClient,
+				client: meili,
 			},
 			wantResp: &Settings{
 				RankingRules:         defaultRankingRules,
 				DistinctAttribute:    (*string)(nil),
 				SearchableAttributes: []string{"*"},
+				SearchCutoffMs:       0,
+				ProximityPrecision:   ByWord,
 				DisplayedAttributes:  []string{"*"},
 				StopWords:            []string{},
 				Synonyms:             map[string][]string(nil),
@@ -233,18 +256,23 @@ func TestIndex_GetSettings(t *testing.T) {
 				TypoTolerance:        &defaultTypoTolerance,
 				Pagination:           &defaultPagination,
 				Faceting:             &defaultFaceting,
+				SeparatorTokens:      make([]string, 0),
+				NonSeparatorTokens:   make([]string, 0),
+				Dictionary:           make([]string, 0),
 			},
 		},
 		{
 			name: "TestIndexGetSettingsWithCustomClient",
 			args: args{
 				UID:    "indexUID",
-				client: customClient,
+				client: customMeili,
 			},
 			wantResp: &Settings{
 				RankingRules:         defaultRankingRules,
 				DistinctAttribute:    (*string)(nil),
 				SearchableAttributes: []string{"*"},
+				SearchCutoffMs:       0,
+				ProximityPrecision:   ByWord,
 				DisplayedAttributes:  []string{"*"},
 				StopWords:            []string{},
 				Synonyms:             map[string][]string(nil),
@@ -253,12 +281,15 @@ func TestIndex_GetSettings(t *testing.T) {
 				TypoTolerance:        &defaultTypoTolerance,
 				Pagination:           &defaultPagination,
 				Faceting:             &defaultFaceting,
+				SeparatorTokens:      make([]string, 0),
+				NonSeparatorTokens:   make([]string, 0),
+				Dictionary:           make([]string, 0),
 			},
 		},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			SetUpIndexForFaceting()
+			setUpIndexForFaceting(tt.args.client)
 			c := tt.args.client
 			i := c.Index(tt.args.UID)
 			t.Cleanup(cleanup(c))
@@ -271,9 +302,14 @@ func TestIndex_GetSettings(t *testing.T) {
 }
 
 func TestIndex_GetStopWords(t *testing.T) {
+	meili := setup(t, "")
+	customMeili := setup(t, "", WithCustomClientWithTLS(&tls.Config{
+		InsecureSkipVerify: true,
+	}))
+
 	type args struct {
 		UID    string
-		client *Client
+		client ServiceManager
 	}
 	tests := []struct {
 		name string
@@ -283,20 +319,20 @@ func TestIndex_GetStopWords(t *testing.T) {
 			name: "TestIndexBasicGetStopWords",
 			args: args{
 				UID:    "indexUID",
-				client: defaultClient,
+				client: meili,
 			},
 		},
 		{
 			name: "TestIndexGetStopWordsCustomClient",
 			args: args{
 				UID:    "indexUID",
-				client: customClient,
+				client: customMeili,
 			},
 		},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			SetUpIndexForFaceting()
+			setUpIndexForFaceting(tt.args.client)
 			c := tt.args.client
 			i := c.Index(tt.args.UID)
 			t.Cleanup(cleanup(c))
@@ -309,9 +345,14 @@ func TestIndex_GetStopWords(t *testing.T) {
 }
 
 func TestIndex_GetSynonyms(t *testing.T) {
+	meili := setup(t, "")
+	customMeili := setup(t, "", WithCustomClientWithTLS(&tls.Config{
+		InsecureSkipVerify: true,
+	}))
+
 	type args struct {
 		UID    string
-		client *Client
+		client ServiceManager
 	}
 	tests := []struct {
 		name string
@@ -321,20 +362,20 @@ func TestIndex_GetSynonyms(t *testing.T) {
 			name: "TestIndexBasicGetSynonyms",
 			args: args{
 				UID:    "indexUID",
-				client: defaultClient,
+				client: meili,
 			},
 		},
 		{
 			name: "TestIndexGetSynonymsWithCustomClient",
 			args: args{
 				UID:    "indexUID",
-				client: customClient,
+				client: customMeili,
 			},
 		},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			SetUpIndexForFaceting()
+			setUpIndexForFaceting(tt.args.client)
 			c := tt.args.client
 			i := c.Index(tt.args.UID)
 			t.Cleanup(cleanup(c))
@@ -347,9 +388,14 @@ func TestIndex_GetSynonyms(t *testing.T) {
 }
 
 func TestIndex_GetSortableAttributes(t *testing.T) {
+	meili := setup(t, "")
+	customMeili := setup(t, "", WithCustomClientWithTLS(&tls.Config{
+		InsecureSkipVerify: true,
+	}))
+
 	type args struct {
 		UID    string
-		client *Client
+		client ServiceManager
 	}
 	tests := []struct {
 		name string
@@ -359,20 +405,20 @@ func TestIndex_GetSortableAttributes(t *testing.T) {
 			name: "TestIndexBasicGetSortableAttributes",
 			args: args{
 				UID:    "indexUID",
-				client: defaultClient,
+				client: meili,
 			},
 		},
 		{
 			name: "TestIndexGetSortableAttributesWithCustomClient",
 			args: args{
 				UID:    "indexUID",
-				client: customClient,
+				client: customMeili,
 			},
 		},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			SetUpIndexForFaceting()
+			setUpIndexForFaceting(tt.args.client)
 			c := tt.args.client
 			i := c.Index(tt.args.UID)
 			t.Cleanup(cleanup(c))
@@ -385,9 +431,14 @@ func TestIndex_GetSortableAttributes(t *testing.T) {
 }
 
 func TestIndex_GetTypoTolerance(t *testing.T) {
+	meili := setup(t, "")
+	customMeili := setup(t, "", WithCustomClientWithTLS(&tls.Config{
+		InsecureSkipVerify: true,
+	}))
+
 	type args struct {
 		UID    string
-		client *Client
+		client ServiceManager
 	}
 	tests := []struct {
 		name     string
@@ -398,7 +449,7 @@ func TestIndex_GetTypoTolerance(t *testing.T) {
 			name: "TestIndexBasicGetTypoTolerance",
 			args: args{
 				UID:    "indexUID",
-				client: defaultClient,
+				client: meili,
 			},
 			wantResp: &defaultTypoTolerance,
 		},
@@ -406,14 +457,14 @@ func TestIndex_GetTypoTolerance(t *testing.T) {
 			name: "TestIndexGetTypoToleranceWithCustomClient",
 			args: args{
 				UID:    "indexUID",
-				client: customClient,
+				client: customMeili,
 			},
 			wantResp: &defaultTypoTolerance,
 		},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			SetUpIndexForFaceting()
+			setUpIndexForFaceting(tt.args.client)
 			c := tt.args.client
 			i := c.Index(tt.args.UID)
 			t.Cleanup(cleanup(c))
@@ -426,9 +477,14 @@ func TestIndex_GetTypoTolerance(t *testing.T) {
 }
 
 func TestIndex_GetPagination(t *testing.T) {
+	meili := setup(t, "")
+	customMeili := setup(t, "", WithCustomClientWithTLS(&tls.Config{
+		InsecureSkipVerify: true,
+	}))
+
 	type args struct {
 		UID    string
-		client *Client
+		client ServiceManager
 	}
 	tests := []struct {
 		name     string
@@ -439,7 +495,7 @@ func TestIndex_GetPagination(t *testing.T) {
 			name: "TestIndexBasicGetPagination",
 			args: args{
 				UID:    "indexUID",
-				client: defaultClient,
+				client: meili,
 			},
 			wantResp: &defaultPagination,
 		},
@@ -447,14 +503,14 @@ func TestIndex_GetPagination(t *testing.T) {
 			name: "TestIndexGetPaginationWithCustomClient",
 			args: args{
 				UID:    "indexUID",
-				client: customClient,
+				client: customMeili,
 			},
 			wantResp: &defaultPagination,
 		},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			SetUpIndexForFaceting()
+			setUpIndexForFaceting(tt.args.client)
 			c := tt.args.client
 			i := c.Index(tt.args.UID)
 			t.Cleanup(cleanup(c))
@@ -467,9 +523,14 @@ func TestIndex_GetPagination(t *testing.T) {
 }
 
 func TestIndex_GetFaceting(t *testing.T) {
+	meili := setup(t, "")
+	customMeili := setup(t, "", WithCustomClientWithTLS(&tls.Config{
+		InsecureSkipVerify: true,
+	}))
+
 	type args struct {
 		UID    string
-		client *Client
+		client ServiceManager
 	}
 	tests := []struct {
 		name     string
@@ -480,7 +541,7 @@ func TestIndex_GetFaceting(t *testing.T) {
 			name: "TestIndexBasicGetFaceting",
 			args: args{
 				UID:    "indexUID",
-				client: defaultClient,
+				client: meili,
 			},
 			wantResp: &defaultFaceting,
 		},
@@ -488,14 +549,14 @@ func TestIndex_GetFaceting(t *testing.T) {
 			name: "TestIndexGetFacetingWithCustomClient",
 			args: args{
 				UID:    "indexUID",
-				client: customClient,
+				client: customMeili,
 			},
 			wantResp: &defaultFaceting,
 		},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			SetUpIndexForFaceting()
+			setUpIndexForFaceting(tt.args.client)
 			c := tt.args.client
 			i := c.Index(tt.args.UID)
 			t.Cleanup(cleanup(c))
@@ -508,9 +569,14 @@ func TestIndex_GetFaceting(t *testing.T) {
 }
 
 func TestIndex_ResetFilterableAttributes(t *testing.T) {
+	meili := setup(t, "")
+	customMeili := setup(t, "", WithCustomClientWithTLS(&tls.Config{
+		InsecureSkipVerify: true,
+	}))
+
 	type args struct {
 		UID    string
-		client *Client
+		client ServiceManager
 	}
 	tests := []struct {
 		name     string
@@ -521,7 +587,7 @@ func TestIndex_ResetFilterableAttributes(t *testing.T) {
 			name: "TestIndexBasicResetFilterableAttributes",
 			args: args{
 				UID:    "indexUID",
-				client: defaultClient,
+				client: meili,
 			},
 			wantTask: &TaskInfo{
 				TaskUID: 1,
@@ -531,7 +597,7 @@ func TestIndex_ResetFilterableAttributes(t *testing.T) {
 			name: "TestIndexResetFilterableAttributesCustomClient",
 			args: args{
 				UID:    "indexUID",
-				client: customClient,
+				client: customMeili,
 			},
 			wantTask: &TaskInfo{
 				TaskUID: 1,
@@ -540,7 +606,7 @@ func TestIndex_ResetFilterableAttributes(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			SetUpIndexForFaceting()
+			setUpIndexForFaceting(tt.args.client)
 			c := tt.args.client
 			i := c.Index(tt.args.UID)
 			t.Cleanup(cleanup(c))
@@ -558,9 +624,14 @@ func TestIndex_ResetFilterableAttributes(t *testing.T) {
 }
 
 func TestIndex_ResetDisplayedAttributes(t *testing.T) {
+	meili := setup(t, "")
+	customMeili := setup(t, "", WithCustomClientWithTLS(&tls.Config{
+		InsecureSkipVerify: true,
+	}))
+
 	type args struct {
 		UID    string
-		client *Client
+		client ServiceManager
 	}
 	tests := []struct {
 		name     string
@@ -572,7 +643,7 @@ func TestIndex_ResetDisplayedAttributes(t *testing.T) {
 			name: "TestIndexBasicResetDisplayedAttributes",
 			args: args{
 				UID:    "indexUID",
-				client: defaultClient,
+				client: meili,
 			},
 			wantTask: &TaskInfo{
 				TaskUID: 1,
@@ -583,7 +654,7 @@ func TestIndex_ResetDisplayedAttributes(t *testing.T) {
 			name: "TestIndexResetDisplayedAttributesCustomClient",
 			args: args{
 				UID:    "indexUID",
-				client: customClient,
+				client: customMeili,
 			},
 			wantTask: &TaskInfo{
 				TaskUID: 1,
@@ -593,7 +664,7 @@ func TestIndex_ResetDisplayedAttributes(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			SetUpIndexForFaceting()
+			setUpIndexForFaceting(tt.args.client)
 			c := tt.args.client
 			i := c.Index(tt.args.UID)
 			t.Cleanup(cleanup(c))
@@ -611,9 +682,14 @@ func TestIndex_ResetDisplayedAttributes(t *testing.T) {
 }
 
 func TestIndex_ResetDistinctAttribute(t *testing.T) {
+	meili := setup(t, "")
+	customMeili := setup(t, "", WithCustomClientWithTLS(&tls.Config{
+		InsecureSkipVerify: true,
+	}))
+
 	type args struct {
 		UID    string
-		client *Client
+		client ServiceManager
 	}
 	tests := []struct {
 		name     string
@@ -624,7 +700,7 @@ func TestIndex_ResetDistinctAttribute(t *testing.T) {
 			name: "TestIndexBasicResetDistinctAttribute",
 			args: args{
 				UID:    "indexUID",
-				client: defaultClient,
+				client: meili,
 			},
 			wantTask: &TaskInfo{
 				TaskUID: 1,
@@ -634,7 +710,7 @@ func TestIndex_ResetDistinctAttribute(t *testing.T) {
 			name: "TestIndexResetDistinctAttributeWithCustomClient",
 			args: args{
 				UID:    "indexUID",
-				client: customClient,
+				client: customMeili,
 			},
 			wantTask: &TaskInfo{
 				TaskUID: 1,
@@ -643,7 +719,7 @@ func TestIndex_ResetDistinctAttribute(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			SetUpIndexForFaceting()
+			setUpIndexForFaceting(tt.args.client)
 			c := tt.args.client
 			i := c.Index(tt.args.UID)
 			t.Cleanup(cleanup(c))
@@ -661,9 +737,14 @@ func TestIndex_ResetDistinctAttribute(t *testing.T) {
 }
 
 func TestIndex_ResetRankingRules(t *testing.T) {
+	meili := setup(t, "")
+	customMeili := setup(t, "", WithCustomClientWithTLS(&tls.Config{
+		InsecureSkipVerify: true,
+	}))
+
 	type args struct {
 		UID    string
-		client *Client
+		client ServiceManager
 	}
 	tests := []struct {
 		name     string
@@ -675,7 +756,7 @@ func TestIndex_ResetRankingRules(t *testing.T) {
 			name: "TestIndexBasicResetRankingRules",
 			args: args{
 				UID:    "indexUID",
-				client: defaultClient,
+				client: meili,
 			},
 			wantTask: &TaskInfo{
 				TaskUID: 1,
@@ -686,7 +767,7 @@ func TestIndex_ResetRankingRules(t *testing.T) {
 			name: "TestIndexResetRankingRulesWithCustomClient",
 			args: args{
 				UID:    "indexUID",
-				client: customClient,
+				client: customMeili,
 			},
 			wantTask: &TaskInfo{
 				TaskUID: 1,
@@ -696,7 +777,7 @@ func TestIndex_ResetRankingRules(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			SetUpIndexForFaceting()
+			setUpIndexForFaceting(tt.args.client)
 			c := tt.args.client
 			i := c.Index(tt.args.UID)
 			t.Cleanup(cleanup(c))
@@ -714,9 +795,14 @@ func TestIndex_ResetRankingRules(t *testing.T) {
 }
 
 func TestIndex_ResetSearchableAttributes(t *testing.T) {
+	meili := setup(t, "")
+	customMeili := setup(t, "", WithCustomClientWithTLS(&tls.Config{
+		InsecureSkipVerify: true,
+	}))
+
 	type args struct {
 		UID    string
-		client *Client
+		client ServiceManager
 	}
 	tests := []struct {
 		name     string
@@ -728,7 +814,7 @@ func TestIndex_ResetSearchableAttributes(t *testing.T) {
 			name: "TestIndexBasicResetSearchableAttributes",
 			args: args{
 				UID:    "indexUID",
-				client: defaultClient,
+				client: meili,
 			},
 			wantTask: &TaskInfo{
 				TaskUID: 1,
@@ -739,7 +825,7 @@ func TestIndex_ResetSearchableAttributes(t *testing.T) {
 			name: "TestIndexResetSearchableAttributesWithCustomClient",
 			args: args{
 				UID:    "indexUID",
-				client: customClient,
+				client: customMeili,
 			},
 			wantTask: &TaskInfo{
 				TaskUID: 1,
@@ -749,7 +835,7 @@ func TestIndex_ResetSearchableAttributes(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			SetUpIndexForFaceting()
+			setUpIndexForFaceting(tt.args.client)
 			c := tt.args.client
 			i := c.Index(tt.args.UID)
 			t.Cleanup(cleanup(c))
@@ -767,9 +853,14 @@ func TestIndex_ResetSearchableAttributes(t *testing.T) {
 }
 
 func TestIndex_ResetSettings(t *testing.T) {
+	meili := setup(t, "")
+	customMeili := setup(t, "", WithCustomClientWithTLS(&tls.Config{
+		InsecureSkipVerify: true,
+	}))
+
 	type args struct {
 		UID    string
-		client *Client
+		client ServiceManager
 	}
 	tests := []struct {
 		name     string
@@ -781,7 +872,7 @@ func TestIndex_ResetSettings(t *testing.T) {
 			name: "TestIndexBasicResetSettings",
 			args: args{
 				UID:    "indexUID",
-				client: defaultClient,
+				client: meili,
 			},
 			wantTask: &TaskInfo{
 				TaskUID: 1,
@@ -798,13 +889,17 @@ func TestIndex_ResetSettings(t *testing.T) {
 				TypoTolerance:        &defaultTypoTolerance,
 				Pagination:           &defaultPagination,
 				Faceting:             &defaultFaceting,
+				ProximityPrecision:   ByWord,
+				SeparatorTokens:      make([]string, 0),
+				NonSeparatorTokens:   make([]string, 0),
+				Dictionary:           make([]string, 0),
 			},
 		},
 		{
 			name: "TestIndexResetSettingsWithCustomClient",
 			args: args{
 				UID:    "indexUID",
-				client: customClient,
+				client: customMeili,
 			},
 			wantTask: &TaskInfo{
 				TaskUID: 1,
@@ -821,12 +916,16 @@ func TestIndex_ResetSettings(t *testing.T) {
 				TypoTolerance:        &defaultTypoTolerance,
 				Pagination:           &defaultPagination,
 				Faceting:             &defaultFaceting,
+				ProximityPrecision:   ByWord,
+				SeparatorTokens:      make([]string, 0),
+				NonSeparatorTokens:   make([]string, 0),
+				Dictionary:           make([]string, 0),
 			},
 		},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			SetUpIndexForFaceting()
+			setUpIndexForFaceting(tt.args.client)
 			c := tt.args.client
 			i := c.Index(tt.args.UID)
 			t.Cleanup(cleanup(c))
@@ -844,9 +943,14 @@ func TestIndex_ResetSettings(t *testing.T) {
 }
 
 func TestIndex_ResetStopWords(t *testing.T) {
+	meili := setup(t, "")
+	customMeili := setup(t, "", WithCustomClientWithTLS(&tls.Config{
+		InsecureSkipVerify: true,
+	}))
+
 	type args struct {
 		UID    string
-		client *Client
+		client ServiceManager
 	}
 	tests := []struct {
 		name     string
@@ -857,7 +961,7 @@ func TestIndex_ResetStopWords(t *testing.T) {
 			name: "TestIndexBasicResetStopWords",
 			args: args{
 				UID:    "indexUID",
-				client: defaultClient,
+				client: meili,
 			},
 			wantTask: &TaskInfo{
 				TaskUID: 1,
@@ -867,7 +971,7 @@ func TestIndex_ResetStopWords(t *testing.T) {
 			name: "TestIndexResetStopWordsWithCustomClient",
 			args: args{
 				UID:    "indexUID",
-				client: customClient,
+				client: customMeili,
 			},
 			wantTask: &TaskInfo{
 				TaskUID: 1,
@@ -876,7 +980,7 @@ func TestIndex_ResetStopWords(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			SetUpIndexForFaceting()
+			setUpIndexForFaceting(tt.args.client)
 			c := tt.args.client
 			i := c.Index(tt.args.UID)
 			t.Cleanup(cleanup(c))
@@ -894,9 +998,14 @@ func TestIndex_ResetStopWords(t *testing.T) {
 }
 
 func TestIndex_ResetSynonyms(t *testing.T) {
+	meili := setup(t, "")
+	customMeili := setup(t, "", WithCustomClientWithTLS(&tls.Config{
+		InsecureSkipVerify: true,
+	}))
+
 	type args struct {
 		UID    string
-		client *Client
+		client ServiceManager
 	}
 	tests := []struct {
 		name     string
@@ -907,7 +1016,7 @@ func TestIndex_ResetSynonyms(t *testing.T) {
 			name: "TestIndexBasicResetSynonyms",
 			args: args{
 				UID:    "indexUID",
-				client: defaultClient,
+				client: meili,
 			},
 			wantTask: &TaskInfo{
 				TaskUID: 1,
@@ -917,7 +1026,7 @@ func TestIndex_ResetSynonyms(t *testing.T) {
 			name: "TestIndexResetSynonymsWithCustomClient",
 			args: args{
 				UID:    "indexUID",
-				client: customClient,
+				client: customMeili,
 			},
 			wantTask: &TaskInfo{
 				TaskUID: 1,
@@ -926,7 +1035,7 @@ func TestIndex_ResetSynonyms(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			SetUpIndexForFaceting()
+			setUpIndexForFaceting(tt.args.client)
 			c := tt.args.client
 			i := c.Index(tt.args.UID)
 			t.Cleanup(cleanup(c))
@@ -944,9 +1053,14 @@ func TestIndex_ResetSynonyms(t *testing.T) {
 }
 
 func TestIndex_ResetSortableAttributes(t *testing.T) {
+	meili := setup(t, "")
+	customMeili := setup(t, "", WithCustomClientWithTLS(&tls.Config{
+		InsecureSkipVerify: true,
+	}))
+
 	type args struct {
 		UID    string
-		client *Client
+		client ServiceManager
 	}
 	tests := []struct {
 		name     string
@@ -957,7 +1071,7 @@ func TestIndex_ResetSortableAttributes(t *testing.T) {
 			name: "TestIndexBasicResetSortableAttributes",
 			args: args{
 				UID:    "indexUID",
-				client: defaultClient,
+				client: meili,
 			},
 			wantTask: &TaskInfo{
 				TaskUID: 1,
@@ -967,7 +1081,7 @@ func TestIndex_ResetSortableAttributes(t *testing.T) {
 			name: "TestIndexResetSortableAttributesCustomClient",
 			args: args{
 				UID:    "indexUID",
-				client: customClient,
+				client: customMeili,
 			},
 			wantTask: &TaskInfo{
 				TaskUID: 1,
@@ -976,7 +1090,7 @@ func TestIndex_ResetSortableAttributes(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			SetUpIndexForFaceting()
+			setUpIndexForFaceting(tt.args.client)
 			c := tt.args.client
 			i := c.Index(tt.args.UID)
 			t.Cleanup(cleanup(c))
@@ -994,9 +1108,14 @@ func TestIndex_ResetSortableAttributes(t *testing.T) {
 }
 
 func TestIndex_ResetTypoTolerance(t *testing.T) {
+	meili := setup(t, "")
+	customMeili := setup(t, "", WithCustomClientWithTLS(&tls.Config{
+		InsecureSkipVerify: true,
+	}))
+
 	type args struct {
 		UID    string
-		client *Client
+		client ServiceManager
 	}
 	tests := []struct {
 		name     string
@@ -1008,7 +1127,7 @@ func TestIndex_ResetTypoTolerance(t *testing.T) {
 			name: "TestIndexBasicResetTypoTolerance",
 			args: args{
 				UID:    "indexUID",
-				client: defaultClient,
+				client: meili,
 			},
 			wantTask: &TaskInfo{
 				TaskUID: 1,
@@ -1019,7 +1138,7 @@ func TestIndex_ResetTypoTolerance(t *testing.T) {
 			name: "TestIndexResetTypoToleranceWithCustomClient",
 			args: args{
 				UID:    "indexUID",
-				client: customClient,
+				client: customMeili,
 			},
 			wantTask: &TaskInfo{
 				TaskUID: 1,
@@ -1029,7 +1148,7 @@ func TestIndex_ResetTypoTolerance(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			SetUpIndexForFaceting()
+			setUpIndexForFaceting(tt.args.client)
 			c := tt.args.client
 			i := c.Index(tt.args.UID)
 			t.Cleanup(cleanup(c))
@@ -1047,9 +1166,14 @@ func TestIndex_ResetTypoTolerance(t *testing.T) {
 }
 
 func TestIndex_ResetPagination(t *testing.T) {
+	meili := setup(t, "")
+	customMeili := setup(t, "", WithCustomClientWithTLS(&tls.Config{
+		InsecureSkipVerify: true,
+	}))
+
 	type args struct {
 		UID    string
-		client *Client
+		client ServiceManager
 	}
 	tests := []struct {
 		name     string
@@ -1061,7 +1185,7 @@ func TestIndex_ResetPagination(t *testing.T) {
 			name: "TestIndexBasicResetPagination",
 			args: args{
 				UID:    "indexUID",
-				client: defaultClient,
+				client: meili,
 			},
 			wantTask: &TaskInfo{
 				TaskUID: 1,
@@ -1072,7 +1196,7 @@ func TestIndex_ResetPagination(t *testing.T) {
 			name: "TestIndexResetPaginationWithCustomClient",
 			args: args{
 				UID:    "indexUID",
-				client: customClient,
+				client: customMeili,
 			},
 			wantTask: &TaskInfo{
 				TaskUID: 1,
@@ -1082,7 +1206,7 @@ func TestIndex_ResetPagination(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			SetUpIndexForFaceting()
+			setUpIndexForFaceting(tt.args.client)
 			c := tt.args.client
 			i := c.Index(tt.args.UID)
 			t.Cleanup(cleanup(c))
@@ -1100,9 +1224,14 @@ func TestIndex_ResetPagination(t *testing.T) {
 }
 
 func TestIndex_ResetFaceting(t *testing.T) {
+	meili := setup(t, "")
+	customMeili := setup(t, "", WithCustomClientWithTLS(&tls.Config{
+		InsecureSkipVerify: true,
+	}))
+
 	type args struct {
 		UID    string
-		client *Client
+		client ServiceManager
 	}
 	tests := []struct {
 		name     string
@@ -1114,7 +1243,7 @@ func TestIndex_ResetFaceting(t *testing.T) {
 			name: "TestIndexBasicResetFaceting",
 			args: args{
 				UID:    "indexUID",
-				client: defaultClient,
+				client: meili,
 			},
 			wantTask: &TaskInfo{
 				TaskUID: 1,
@@ -1125,7 +1254,7 @@ func TestIndex_ResetFaceting(t *testing.T) {
 			name: "TestIndexResetFacetingWithCustomClient",
 			args: args{
 				UID:    "indexUID",
-				client: customClient,
+				client: customMeili,
 			},
 			wantTask: &TaskInfo{
 				TaskUID: 1,
@@ -1135,7 +1264,7 @@ func TestIndex_ResetFaceting(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			SetUpIndexForFaceting()
+			setUpIndexForFaceting(tt.args.client)
 			c := tt.args.client
 			i := c.Index(tt.args.UID)
 			t.Cleanup(cleanup(c))
@@ -1153,9 +1282,14 @@ func TestIndex_ResetFaceting(t *testing.T) {
 }
 
 func TestIndex_UpdateFilterableAttributes(t *testing.T) {
+	meili := setup(t, "")
+	customMeili := setup(t, "", WithCustomClientWithTLS(&tls.Config{
+		InsecureSkipVerify: true,
+	}))
+
 	type args struct {
 		UID     string
-		client  *Client
+		client  ServiceManager
 		request []string
 	}
 	tests := []struct {
@@ -1167,7 +1301,7 @@ func TestIndex_UpdateFilterableAttributes(t *testing.T) {
 			name: "TestIndexBasicUpdateFilterableAttributes",
 			args: args{
 				UID:    "indexUID",
-				client: defaultClient,
+				client: meili,
 				request: []string{
 					"title",
 				},
@@ -1180,7 +1314,7 @@ func TestIndex_UpdateFilterableAttributes(t *testing.T) {
 			name: "TestIndexUpdateFilterableAttributesWithCustomClient",
 			args: args{
 				UID:    "indexUID",
-				client: customClient,
+				client: customMeili,
 				request: []string{
 					"title",
 				},
@@ -1192,7 +1326,7 @@ func TestIndex_UpdateFilterableAttributes(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			SetUpIndexForFaceting()
+			setUpIndexForFaceting(tt.args.client)
 			c := tt.args.client
 			i := c.Index(tt.args.UID)
 			t.Cleanup(cleanup(c))
@@ -1214,9 +1348,14 @@ func TestIndex_UpdateFilterableAttributes(t *testing.T) {
 }
 
 func TestIndex_UpdateDisplayedAttributes(t *testing.T) {
+	meili := setup(t, "")
+	customMeili := setup(t, "", WithCustomClientWithTLS(&tls.Config{
+		InsecureSkipVerify: true,
+	}))
+
 	type args struct {
 		UID     string
-		client  *Client
+		client  ServiceManager
 		request []string
 	}
 	tests := []struct {
@@ -1229,7 +1368,7 @@ func TestIndex_UpdateDisplayedAttributes(t *testing.T) {
 			name: "TestIndexBasicUpdateDisplayedAttributes",
 			args: args{
 				UID:    "indexUID",
-				client: defaultClient,
+				client: meili,
 				request: []string{
 					"book_id", "tag", "title",
 				},
@@ -1243,7 +1382,7 @@ func TestIndex_UpdateDisplayedAttributes(t *testing.T) {
 			name: "TestIndexUpdateDisplayedAttributesWithCustomClient",
 			args: args{
 				UID:    "indexUID",
-				client: customClient,
+				client: customMeili,
 				request: []string{
 					"book_id", "tag", "title",
 				},
@@ -1256,7 +1395,7 @@ func TestIndex_UpdateDisplayedAttributes(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			SetUpIndexForFaceting()
+			setUpIndexForFaceting(tt.args.client)
 			c := tt.args.client
 			i := c.Index(tt.args.UID)
 			t.Cleanup(cleanup(c))
@@ -1278,9 +1417,14 @@ func TestIndex_UpdateDisplayedAttributes(t *testing.T) {
 }
 
 func TestIndex_UpdateDistinctAttribute(t *testing.T) {
+	meili := setup(t, "")
+	customMeili := setup(t, "", WithCustomClientWithTLS(&tls.Config{
+		InsecureSkipVerify: true,
+	}))
+
 	type args struct {
 		UID     string
-		client  *Client
+		client  ServiceManager
 		request string
 	}
 	tests := []struct {
@@ -1292,7 +1436,7 @@ func TestIndex_UpdateDistinctAttribute(t *testing.T) {
 			name: "TestIndexBasicUpdateDistinctAttribute",
 			args: args{
 				UID:     "indexUID",
-				client:  defaultClient,
+				client:  meili,
 				request: "movie_id",
 			},
 			wantTask: &TaskInfo{
@@ -1303,7 +1447,7 @@ func TestIndex_UpdateDistinctAttribute(t *testing.T) {
 			name: "TestIndexUpdateDistinctAttributeWithCustomClient",
 			args: args{
 				UID:     "indexUID",
-				client:  customClient,
+				client:  customMeili,
 				request: "movie_id",
 			},
 			wantTask: &TaskInfo{
@@ -1313,7 +1457,7 @@ func TestIndex_UpdateDistinctAttribute(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			SetUpIndexForFaceting()
+			setUpIndexForFaceting(tt.args.client)
 			c := tt.args.client
 			i := c.Index(tt.args.UID)
 			t.Cleanup(cleanup(c))
@@ -1335,9 +1479,14 @@ func TestIndex_UpdateDistinctAttribute(t *testing.T) {
 }
 
 func TestIndex_UpdateRankingRules(t *testing.T) {
+	meili := setup(t, "")
+	customMeili := setup(t, "", WithCustomClientWithTLS(&tls.Config{
+		InsecureSkipVerify: true,
+	}))
+
 	type args struct {
 		UID     string
-		client  *Client
+		client  ServiceManager
 		request []string
 	}
 	tests := []struct {
@@ -1350,7 +1499,7 @@ func TestIndex_UpdateRankingRules(t *testing.T) {
 			name: "TestIndexBasicUpdateRankingRules",
 			args: args{
 				UID:    "indexUID",
-				client: defaultClient,
+				client: meili,
 				request: []string{
 					"typo", "words",
 				},
@@ -1364,7 +1513,7 @@ func TestIndex_UpdateRankingRules(t *testing.T) {
 			name: "TestIndexUpdateRankingRulesWithCustomClient",
 			args: args{
 				UID:    "indexUID",
-				client: customClient,
+				client: customMeili,
 				request: []string{
 					"typo", "words",
 				},
@@ -1378,7 +1527,7 @@ func TestIndex_UpdateRankingRules(t *testing.T) {
 			name: "TestIndexUpdateRankingRulesAscending",
 			args: args{
 				UID:    "indexUID",
-				client: defaultClient,
+				client: meili,
 				request: []string{
 					"BookID:asc",
 				},
@@ -1391,7 +1540,7 @@ func TestIndex_UpdateRankingRules(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			SetUpIndexForFaceting()
+			setUpIndexForFaceting(tt.args.client)
 			c := tt.args.client
 			i := c.Index(tt.args.UID)
 			t.Cleanup(cleanup(c))
@@ -1413,9 +1562,14 @@ func TestIndex_UpdateRankingRules(t *testing.T) {
 }
 
 func TestIndex_UpdateSearchableAttributes(t *testing.T) {
+	meili := setup(t, "")
+	customMeili := setup(t, "", WithCustomClientWithTLS(&tls.Config{
+		InsecureSkipVerify: true,
+	}))
+
 	type args struct {
 		UID     string
-		client  *Client
+		client  ServiceManager
 		request []string
 	}
 	tests := []struct {
@@ -1428,7 +1582,7 @@ func TestIndex_UpdateSearchableAttributes(t *testing.T) {
 			name: "TestIndexBasicUpdateSearchableAttributes",
 			args: args{
 				UID:    "indexUID",
-				client: defaultClient,
+				client: meili,
 				request: []string{
 					"title", "tag",
 				},
@@ -1442,7 +1596,7 @@ func TestIndex_UpdateSearchableAttributes(t *testing.T) {
 			name: "TestIndexUpdateSearchableAttributesWithCustomClient",
 			args: args{
 				UID:    "indexUID",
-				client: customClient,
+				client: customMeili,
 				request: []string{
 					"title", "tag",
 				},
@@ -1455,7 +1609,7 @@ func TestIndex_UpdateSearchableAttributes(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			SetUpIndexForFaceting()
+			setUpIndexForFaceting(tt.args.client)
 			c := tt.args.client
 			i := c.Index(tt.args.UID)
 			t.Cleanup(cleanup(c))
@@ -1477,9 +1631,14 @@ func TestIndex_UpdateSearchableAttributes(t *testing.T) {
 }
 
 func TestIndex_UpdateSettings(t *testing.T) {
+	meili := setup(t, "")
+	customMeili := setup(t, "", WithCustomClientWithTLS(&tls.Config{
+		InsecureSkipVerify: true,
+	}))
+
 	type args struct {
 		UID     string
-		client  *Client
+		client  ServiceManager
 		request Settings
 	}
 	tests := []struct {
@@ -1492,7 +1651,7 @@ func TestIndex_UpdateSettings(t *testing.T) {
 			name: "TestIndexBasicUpdateSettings",
 			args: args{
 				UID:    "indexUID",
-				client: defaultClient,
+				client: meili,
 				request: Settings{
 					RankingRules: []string{
 						"typo", "words",
@@ -1530,7 +1689,15 @@ func TestIndex_UpdateSettings(t *testing.T) {
 					},
 					Faceting: &Faceting{
 						MaxValuesPerFacet: 200,
+						SortFacetValuesBy: map[string]SortFacetType{
+							"*": SortFacetTypeAlpha,
+						},
 					},
+					SearchCutoffMs:     150,
+					ProximityPrecision: ByAttribute,
+					SeparatorTokens:    make([]string, 0),
+					NonSeparatorTokens: make([]string, 0),
+					Dictionary:         make([]string, 0),
 				},
 			},
 			wantTask: &TaskInfo{
@@ -1548,13 +1715,18 @@ func TestIndex_UpdateSettings(t *testing.T) {
 				TypoTolerance:        &defaultTypoTolerance,
 				Pagination:           &defaultPagination,
 				Faceting:             &defaultFaceting,
+				SearchCutoffMs:       150,
+				ProximityPrecision:   ByAttribute,
+				SeparatorTokens:      make([]string, 0),
+				NonSeparatorTokens:   make([]string, 0),
+				Dictionary:           make([]string, 0),
 			},
 		},
 		{
 			name: "TestIndexUpdateSettingsWithCustomClient",
 			args: args{
 				UID:    "indexUID",
-				client: customClient,
+				client: customMeili,
 				request: Settings{
 					RankingRules: []string{
 						"typo", "words",
@@ -1592,7 +1764,15 @@ func TestIndex_UpdateSettings(t *testing.T) {
 					},
 					Faceting: &Faceting{
 						MaxValuesPerFacet: 200,
+						SortFacetValuesBy: map[string]SortFacetType{
+							"*": SortFacetTypeAlpha,
+						},
 					},
+					SearchCutoffMs:     150,
+					ProximityPrecision: ByWord,
+					SeparatorTokens:    make([]string, 0),
+					NonSeparatorTokens: make([]string, 0),
+					Dictionary:         make([]string, 0),
 				},
 			},
 			wantTask: &TaskInfo{
@@ -1610,26 +1790,27 @@ func TestIndex_UpdateSettings(t *testing.T) {
 				TypoTolerance:        &defaultTypoTolerance,
 				Pagination:           &defaultPagination,
 				Faceting:             &defaultFaceting,
+				SearchCutoffMs:       150,
+				ProximityPrecision:   ByWord,
+				SeparatorTokens:      make([]string, 0),
+				NonSeparatorTokens:   make([]string, 0),
+				Dictionary:           make([]string, 0),
 			},
 		},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			SetUpIndexForFaceting()
+			setUpIndexForFaceting(tt.args.client)
 			c := tt.args.client
 			i := c.Index(tt.args.UID)
 			t.Cleanup(cleanup(c))
-
-			gotResp, err := i.GetSettings()
-			require.NoError(t, err)
-			require.Equal(t, tt.wantResp, gotResp)
 
 			gotTask, err := i.UpdateSettings(&tt.args.request)
 			require.NoError(t, err)
 			require.GreaterOrEqual(t, gotTask.TaskUID, tt.wantTask.TaskUID)
 			testWaitForTask(t, i, gotTask)
 
-			gotResp, err = i.GetSettings()
+			gotResp, err := i.GetSettings()
 			require.NoError(t, err)
 			require.Equal(t, &tt.args.request, gotResp)
 		})
@@ -1637,9 +1818,14 @@ func TestIndex_UpdateSettings(t *testing.T) {
 }
 
 func TestIndex_UpdateSettingsOneByOne(t *testing.T) {
+	meili := setup(t, "")
+	customMeili := setup(t, "", WithCustomClientWithTLS(&tls.Config{
+		InsecureSkipVerify: true,
+	}))
+
 	type args struct {
 		UID            string
-		client         *Client
+		client         ServiceManager
 		firstRequest   Settings
 		firstResponse  Settings
 		secondRequest  Settings
@@ -1655,7 +1841,7 @@ func TestIndex_UpdateSettingsOneByOne(t *testing.T) {
 			name: "TestIndexUpdateJustSynonyms",
 			args: args{
 				UID:    "indexUID",
-				client: defaultClient,
+				client: meili,
 				firstRequest: Settings{
 					RankingRules: []string{
 						"typo", "words",
@@ -1680,6 +1866,10 @@ func TestIndex_UpdateSettingsOneByOne(t *testing.T) {
 					TypoTolerance:        &defaultTypoTolerance,
 					Pagination:           &defaultPagination,
 					Faceting:             &defaultFaceting,
+					ProximityPrecision:   ByWord,
+					SeparatorTokens:      make([]string, 0),
+					NonSeparatorTokens:   make([]string, 0),
+					Dictionary:           make([]string, 0),
 				},
 				secondRequest: Settings{
 					Synonyms: map[string][]string{
@@ -1702,6 +1892,10 @@ func TestIndex_UpdateSettingsOneByOne(t *testing.T) {
 					TypoTolerance:        &defaultTypoTolerance,
 					Pagination:           &defaultPagination,
 					Faceting:             &defaultFaceting,
+					ProximityPrecision:   ByWord,
+					SeparatorTokens:      make([]string, 0),
+					NonSeparatorTokens:   make([]string, 0),
+					Dictionary:           make([]string, 0),
 				},
 			},
 			wantTask: &TaskInfo{
@@ -1719,13 +1913,17 @@ func TestIndex_UpdateSettingsOneByOne(t *testing.T) {
 				TypoTolerance:        &defaultTypoTolerance,
 				Pagination:           &defaultPagination,
 				Faceting:             &defaultFaceting,
+				ProximityPrecision:   ByWord,
+				SeparatorTokens:      make([]string, 0),
+				NonSeparatorTokens:   make([]string, 0),
+				Dictionary:           make([]string, 0),
 			},
 		},
 		{
 			name: "TestIndexUpdateJustSynonymsWithCustomClient",
 			args: args{
 				UID:    "indexUID",
-				client: customClient,
+				client: customMeili,
 				firstRequest: Settings{
 					RankingRules: []string{
 						"typo", "words",
@@ -1750,6 +1948,10 @@ func TestIndex_UpdateSettingsOneByOne(t *testing.T) {
 					TypoTolerance:        &defaultTypoTolerance,
 					Pagination:           &defaultPagination,
 					Faceting:             &defaultFaceting,
+					ProximityPrecision:   ByWord,
+					SeparatorTokens:      make([]string, 0),
+					NonSeparatorTokens:   make([]string, 0),
+					Dictionary:           make([]string, 0),
 				},
 				secondRequest: Settings{
 					Synonyms: map[string][]string{
@@ -1772,6 +1974,10 @@ func TestIndex_UpdateSettingsOneByOne(t *testing.T) {
 					TypoTolerance:        &defaultTypoTolerance,
 					Pagination:           &defaultPagination,
 					Faceting:             &defaultFaceting,
+					ProximityPrecision:   ByWord,
+					SeparatorTokens:      make([]string, 0),
+					NonSeparatorTokens:   make([]string, 0),
+					Dictionary:           make([]string, 0),
 				},
 			},
 			wantTask: &TaskInfo{
@@ -1789,13 +1995,17 @@ func TestIndex_UpdateSettingsOneByOne(t *testing.T) {
 				TypoTolerance:        &defaultTypoTolerance,
 				Pagination:           &defaultPagination,
 				Faceting:             &defaultFaceting,
+				ProximityPrecision:   ByWord,
+				SeparatorTokens:      make([]string, 0),
+				NonSeparatorTokens:   make([]string, 0),
+				Dictionary:           make([]string, 0),
 			},
 		},
 		{
 			name: "TestIndexUpdateJustSearchableAttributes",
 			args: args{
 				UID:    "indexUID",
-				client: defaultClient,
+				client: meili,
 				firstRequest: Settings{
 					RankingRules: []string{
 						"typo", "words",
@@ -1820,6 +2030,10 @@ func TestIndex_UpdateSettingsOneByOne(t *testing.T) {
 					TypoTolerance:        &defaultTypoTolerance,
 					Pagination:           &defaultPagination,
 					Faceting:             &defaultFaceting,
+					ProximityPrecision:   ByWord,
+					SeparatorTokens:      make([]string, 0),
+					NonSeparatorTokens:   make([]string, 0),
+					Dictionary:           make([]string, 0),
 				},
 				secondRequest: Settings{
 					SearchableAttributes: []string{
@@ -1842,6 +2056,10 @@ func TestIndex_UpdateSettingsOneByOne(t *testing.T) {
 					TypoTolerance:        &defaultTypoTolerance,
 					Pagination:           &defaultPagination,
 					Faceting:             &defaultFaceting,
+					ProximityPrecision:   ByWord,
+					SeparatorTokens:      make([]string, 0),
+					NonSeparatorTokens:   make([]string, 0),
+					Dictionary:           make([]string, 0),
 				},
 			},
 			wantTask: &TaskInfo{
@@ -1859,13 +2077,17 @@ func TestIndex_UpdateSettingsOneByOne(t *testing.T) {
 				TypoTolerance:        &defaultTypoTolerance,
 				Pagination:           &defaultPagination,
 				Faceting:             &defaultFaceting,
+				ProximityPrecision:   ByWord,
+				SeparatorTokens:      make([]string, 0),
+				NonSeparatorTokens:   make([]string, 0),
+				Dictionary:           make([]string, 0),
 			},
 		},
 		{
 			name: "TestIndexUpdateJustDisplayedAttributes",
 			args: args{
 				UID:    "indexUID",
-				client: defaultClient,
+				client: meili,
 				firstRequest: Settings{
 					RankingRules: []string{
 						"typo", "words",
@@ -1890,6 +2112,10 @@ func TestIndex_UpdateSettingsOneByOne(t *testing.T) {
 					TypoTolerance:        &defaultTypoTolerance,
 					Pagination:           &defaultPagination,
 					Faceting:             &defaultFaceting,
+					ProximityPrecision:   ByWord,
+					SeparatorTokens:      make([]string, 0),
+					NonSeparatorTokens:   make([]string, 0),
+					Dictionary:           make([]string, 0),
 				},
 				secondRequest: Settings{
 					DisplayedAttributes: []string{
@@ -1912,6 +2138,10 @@ func TestIndex_UpdateSettingsOneByOne(t *testing.T) {
 					TypoTolerance:        &defaultTypoTolerance,
 					Pagination:           &defaultPagination,
 					Faceting:             &defaultFaceting,
+					ProximityPrecision:   ByWord,
+					SeparatorTokens:      make([]string, 0),
+					NonSeparatorTokens:   make([]string, 0),
+					Dictionary:           make([]string, 0),
 				},
 			},
 			wantTask: &TaskInfo{
@@ -1929,13 +2159,17 @@ func TestIndex_UpdateSettingsOneByOne(t *testing.T) {
 				TypoTolerance:        &defaultTypoTolerance,
 				Pagination:           &defaultPagination,
 				Faceting:             &defaultFaceting,
+				ProximityPrecision:   ByWord,
+				SeparatorTokens:      make([]string, 0),
+				NonSeparatorTokens:   make([]string, 0),
+				Dictionary:           make([]string, 0),
 			},
 		},
 		{
 			name: "TestIndexUpdateJustStopWords",
 			args: args{
 				UID:    "indexUID",
-				client: defaultClient,
+				client: meili,
 				firstRequest: Settings{
 					RankingRules: []string{
 						"typo", "words",
@@ -1960,6 +2194,10 @@ func TestIndex_UpdateSettingsOneByOne(t *testing.T) {
 					TypoTolerance:        &defaultTypoTolerance,
 					Pagination:           &defaultPagination,
 					Faceting:             &defaultFaceting,
+					ProximityPrecision:   ByWord,
+					SeparatorTokens:      make([]string, 0),
+					NonSeparatorTokens:   make([]string, 0),
+					Dictionary:           make([]string, 0),
 				},
 				secondRequest: Settings{
 					StopWords: []string{
@@ -1982,6 +2220,10 @@ func TestIndex_UpdateSettingsOneByOne(t *testing.T) {
 					TypoTolerance:        &defaultTypoTolerance,
 					Pagination:           &defaultPagination,
 					Faceting:             &defaultFaceting,
+					ProximityPrecision:   ByWord,
+					SeparatorTokens:      make([]string, 0),
+					NonSeparatorTokens:   make([]string, 0),
+					Dictionary:           make([]string, 0),
 				},
 			},
 			wantTask: &TaskInfo{
@@ -1999,13 +2241,17 @@ func TestIndex_UpdateSettingsOneByOne(t *testing.T) {
 				TypoTolerance:        &defaultTypoTolerance,
 				Pagination:           &defaultPagination,
 				Faceting:             &defaultFaceting,
+				ProximityPrecision:   ByWord,
+				SeparatorTokens:      make([]string, 0),
+				NonSeparatorTokens:   make([]string, 0),
+				Dictionary:           make([]string, 0),
 			},
 		},
 		{
 			name: "TestIndexUpdateJustFilterableAttributes",
 			args: args{
 				UID:    "indexUID",
-				client: defaultClient,
+				client: meili,
 				firstRequest: Settings{
 					RankingRules: []string{
 						"typo", "words",
@@ -2030,6 +2276,10 @@ func TestIndex_UpdateSettingsOneByOne(t *testing.T) {
 					TypoTolerance:      &defaultTypoTolerance,
 					Pagination:         &defaultPagination,
 					Faceting:           &defaultFaceting,
+					ProximityPrecision: ByWord,
+					SeparatorTokens:    make([]string, 0),
+					NonSeparatorTokens: make([]string, 0),
+					Dictionary:         make([]string, 0),
 				},
 				secondRequest: Settings{
 					FilterableAttributes: []string{
@@ -2052,6 +2302,10 @@ func TestIndex_UpdateSettingsOneByOne(t *testing.T) {
 					TypoTolerance:      &defaultTypoTolerance,
 					Pagination:         &defaultPagination,
 					Faceting:           &defaultFaceting,
+					ProximityPrecision: ByWord,
+					SeparatorTokens:    make([]string, 0),
+					NonSeparatorTokens: make([]string, 0),
+					Dictionary:         make([]string, 0),
 				},
 			},
 			wantTask: &TaskInfo{
@@ -2069,13 +2323,17 @@ func TestIndex_UpdateSettingsOneByOne(t *testing.T) {
 				TypoTolerance:        &defaultTypoTolerance,
 				Pagination:           &defaultPagination,
 				Faceting:             &defaultFaceting,
+				ProximityPrecision:   ByWord,
+				SeparatorTokens:      make([]string, 0),
+				NonSeparatorTokens:   make([]string, 0),
+				Dictionary:           make([]string, 0),
 			},
 		},
 		{
 			name: "TestIndexUpdateJustSortableAttributes",
 			args: args{
 				UID:    "indexUID",
-				client: defaultClient,
+				client: meili,
 				firstRequest: Settings{
 					RankingRules: []string{
 						"typo", "words",
@@ -2097,9 +2355,13 @@ func TestIndex_UpdateSettingsOneByOne(t *testing.T) {
 					SortableAttributes: []string{
 						"title",
 					},
-					TypoTolerance: &defaultTypoTolerance,
-					Pagination:    &defaultPagination,
-					Faceting:      &defaultFaceting,
+					TypoTolerance:      &defaultTypoTolerance,
+					Pagination:         &defaultPagination,
+					Faceting:           &defaultFaceting,
+					ProximityPrecision: ByWord,
+					SeparatorTokens:    make([]string, 0),
+					NonSeparatorTokens: make([]string, 0),
+					Dictionary:         make([]string, 0),
 				},
 				secondRequest: Settings{
 					SortableAttributes: []string{
@@ -2119,9 +2381,13 @@ func TestIndex_UpdateSettingsOneByOne(t *testing.T) {
 					SortableAttributes: []string{
 						"title",
 					},
-					TypoTolerance: &defaultTypoTolerance,
-					Pagination:    &defaultPagination,
-					Faceting:      &defaultFaceting,
+					TypoTolerance:      &defaultTypoTolerance,
+					Pagination:         &defaultPagination,
+					Faceting:           &defaultFaceting,
+					ProximityPrecision: ByWord,
+					SeparatorTokens:    make([]string, 0),
+					NonSeparatorTokens: make([]string, 0),
+					Dictionary:         make([]string, 0),
 				},
 			},
 			wantTask: &TaskInfo{
@@ -2139,13 +2405,17 @@ func TestIndex_UpdateSettingsOneByOne(t *testing.T) {
 				TypoTolerance:        &defaultTypoTolerance,
 				Pagination:           &defaultPagination,
 				Faceting:             &defaultFaceting,
+				ProximityPrecision:   ByWord,
+				SeparatorTokens:      make([]string, 0),
+				NonSeparatorTokens:   make([]string, 0),
+				Dictionary:           make([]string, 0),
 			},
 		},
 		{
 			name: "TestIndexUpdateJustTypoTolerance",
 			args: args{
 				UID:    "indexUID",
-				client: defaultClient,
+				client: meili,
 				firstRequest: Settings{
 					RankingRules: []string{
 						"typo", "words",
@@ -2182,6 +2452,10 @@ func TestIndex_UpdateSettingsOneByOne(t *testing.T) {
 					SortableAttributes:   []string{},
 					Pagination:           &defaultPagination,
 					Faceting:             &defaultFaceting,
+					ProximityPrecision:   ByWord,
+					SeparatorTokens:      make([]string, 0),
+					NonSeparatorTokens:   make([]string, 0),
+					Dictionary:           make([]string, 0),
 				},
 				secondRequest: Settings{
 					TypoTolerance: &TypoTolerance{
@@ -2222,8 +2496,12 @@ func TestIndex_UpdateSettingsOneByOne(t *testing.T) {
 							"year",
 						},
 					},
-					Pagination: &defaultPagination,
-					Faceting:   &defaultFaceting,
+					Pagination:         &defaultPagination,
+					Faceting:           &defaultFaceting,
+					ProximityPrecision: ByWord,
+					SeparatorTokens:    make([]string, 0),
+					NonSeparatorTokens: make([]string, 0),
+					Dictionary:         make([]string, 0),
 				},
 			},
 			wantTask: &TaskInfo{
@@ -2241,13 +2519,17 @@ func TestIndex_UpdateSettingsOneByOne(t *testing.T) {
 				TypoTolerance:        &defaultTypoTolerance,
 				Pagination:           &defaultPagination,
 				Faceting:             &defaultFaceting,
+				ProximityPrecision:   ByWord,
+				SeparatorTokens:      make([]string, 0),
+				NonSeparatorTokens:   make([]string, 0),
+				Dictionary:           make([]string, 0),
 			},
 		},
 		{
 			name: "TestIndexUpdateJustPagination",
 			args: args{
 				UID:    "indexUID",
-				client: defaultClient,
+				client: meili,
 				firstRequest: Settings{
 					RankingRules: []string{
 						"typo", "words",
@@ -2271,7 +2553,11 @@ func TestIndex_UpdateSettingsOneByOne(t *testing.T) {
 					Pagination: &Pagination{
 						MaxTotalHits: 1200,
 					},
-					Faceting: &defaultFaceting,
+					Faceting:           &defaultFaceting,
+					ProximityPrecision: ByWord,
+					SeparatorTokens:    make([]string, 0),
+					NonSeparatorTokens: make([]string, 0),
+					Dictionary:         make([]string, 0),
 				},
 				secondRequest: Settings{
 					Pagination: &Pagination{
@@ -2293,7 +2579,11 @@ func TestIndex_UpdateSettingsOneByOne(t *testing.T) {
 					Pagination: &Pagination{
 						MaxTotalHits: 1200,
 					},
-					Faceting: &defaultFaceting,
+					Faceting:           &defaultFaceting,
+					ProximityPrecision: ByWord,
+					SeparatorTokens:    make([]string, 0),
+					NonSeparatorTokens: make([]string, 0),
+					Dictionary:         make([]string, 0),
 				},
 			},
 			wantTask: &TaskInfo{
@@ -2311,13 +2601,17 @@ func TestIndex_UpdateSettingsOneByOne(t *testing.T) {
 				TypoTolerance:        &defaultTypoTolerance,
 				Pagination:           &defaultPagination,
 				Faceting:             &defaultFaceting,
+				ProximityPrecision:   ByWord,
+				SeparatorTokens:      make([]string, 0),
+				NonSeparatorTokens:   make([]string, 0),
+				Dictionary:           make([]string, 0),
 			},
 		},
 		{
 			name: "TestIndexUpdateJustFaceting",
 			args: args{
 				UID:    "indexUID",
-				client: defaultClient,
+				client: meili,
 				firstRequest: Settings{
 					RankingRules: []string{
 						"typo", "words",
@@ -2339,9 +2633,16 @@ func TestIndex_UpdateSettingsOneByOne(t *testing.T) {
 					SortableAttributes:   []string{},
 					TypoTolerance:        &defaultTypoTolerance,
 					Pagination:           &defaultPagination,
+					ProximityPrecision:   ByWord,
 					Faceting: &Faceting{
 						MaxValuesPerFacet: 200,
+						SortFacetValuesBy: map[string]SortFacetType{
+							"*": SortFacetTypeAlpha,
+						},
 					},
+					SeparatorTokens:    make([]string, 0),
+					NonSeparatorTokens: make([]string, 0),
+					Dictionary:         make([]string, 0),
 				},
 				secondRequest: Settings{
 					Faceting: &Faceting{
@@ -2361,9 +2662,16 @@ func TestIndex_UpdateSettingsOneByOne(t *testing.T) {
 					SortableAttributes:   []string{},
 					TypoTolerance:        &defaultTypoTolerance,
 					Pagination:           &defaultPagination,
+					ProximityPrecision:   ByWord,
 					Faceting: &Faceting{
 						MaxValuesPerFacet: 200,
+						SortFacetValuesBy: map[string]SortFacetType{
+							"*": SortFacetTypeAlpha,
+						},
 					},
+					SeparatorTokens:    make([]string, 0),
+					NonSeparatorTokens: make([]string, 0),
+					Dictionary:         make([]string, 0),
 				},
 			},
 			wantTask: &TaskInfo{
@@ -2381,12 +2689,103 @@ func TestIndex_UpdateSettingsOneByOne(t *testing.T) {
 				TypoTolerance:        &defaultTypoTolerance,
 				Pagination:           &defaultPagination,
 				Faceting:             &defaultFaceting,
+				ProximityPrecision:   ByWord,
+				SeparatorTokens:      make([]string, 0),
+				NonSeparatorTokens:   make([]string, 0),
+				Dictionary:           make([]string, 0),
+			},
+		},
+		{
+			name: "TestIndexUpdateJustProximityPrecision",
+			args: args{
+				UID:    "indexUID",
+				client: meili,
+				firstRequest: Settings{
+					RankingRules: []string{
+						"typo", "words",
+					},
+					ProximityPrecision: ByAttribute,
+				},
+				firstResponse: Settings{
+					RankingRules: []string{
+						"typo", "words",
+					},
+					DistinctAttribute:    (*string)(nil),
+					SearchableAttributes: []string{"*"},
+					DisplayedAttributes:  []string{"*"},
+					StopWords:            []string{},
+					Synonyms:             map[string][]string(nil),
+					FilterableAttributes: []string{},
+					SortableAttributes:   []string{},
+					TypoTolerance:        &defaultTypoTolerance,
+					Pagination:           &defaultPagination,
+					ProximityPrecision:   ByAttribute,
+					Faceting: &Faceting{
+						MaxValuesPerFacet: 100,
+						SortFacetValuesBy: map[string]SortFacetType{
+							"*": SortFacetTypeAlpha,
+						},
+					},
+					SeparatorTokens:    make([]string, 0),
+					NonSeparatorTokens: make([]string, 0),
+					Dictionary:         make([]string, 0),
+				},
+				secondRequest: Settings{
+					RankingRules: []string{
+						"typo", "words",
+					},
+					ProximityPrecision: ByWord,
+				},
+				secondResponse: Settings{
+					RankingRules: []string{
+						"typo", "words",
+					},
+					DistinctAttribute:    (*string)(nil),
+					SearchableAttributes: []string{"*"},
+					DisplayedAttributes:  []string{"*"},
+					StopWords:            []string{},
+					Synonyms:             map[string][]string(nil),
+					FilterableAttributes: []string{},
+					SortableAttributes:   []string{},
+					TypoTolerance:        &defaultTypoTolerance,
+					Pagination:           &defaultPagination,
+					ProximityPrecision:   ByWord,
+					Faceting: &Faceting{
+						MaxValuesPerFacet: 100,
+						SortFacetValuesBy: map[string]SortFacetType{
+							"*": SortFacetTypeAlpha,
+						},
+					},
+					SeparatorTokens:    make([]string, 0),
+					NonSeparatorTokens: make([]string, 0),
+					Dictionary:         make([]string, 0),
+				},
+			},
+			wantTask: &TaskInfo{
+				TaskUID: 1,
+			},
+			wantResp: &Settings{
+				RankingRules:         defaultRankingRules,
+				DistinctAttribute:    (*string)(nil),
+				SearchableAttributes: []string{"*"},
+				DisplayedAttributes:  []string{"*"},
+				StopWords:            []string{},
+				Synonyms:             map[string][]string(nil),
+				FilterableAttributes: []string{},
+				SortableAttributes:   []string{},
+				TypoTolerance:        &defaultTypoTolerance,
+				Pagination:           &defaultPagination,
+				Faceting:             &defaultFaceting,
+				ProximityPrecision:   ByWord,
+				SeparatorTokens:      make([]string, 0),
+				NonSeparatorTokens:   make([]string, 0),
+				Dictionary:           make([]string, 0),
 			},
 		},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			SetUpIndexForFaceting()
+			setUpIndexForFaceting(tt.args.client)
 			c := tt.args.client
 			i := c.Index(tt.args.UID)
 			t.Cleanup(cleanup(c))
@@ -2418,9 +2817,14 @@ func TestIndex_UpdateSettingsOneByOne(t *testing.T) {
 }
 
 func TestIndex_UpdateStopWords(t *testing.T) {
+	meili := setup(t, "")
+	customMeili := setup(t, "", WithCustomClientWithTLS(&tls.Config{
+		InsecureSkipVerify: true,
+	}))
+
 	type args struct {
 		UID     string
-		client  *Client
+		client  ServiceManager
 		request []string
 	}
 	tests := []struct {
@@ -2432,7 +2836,7 @@ func TestIndex_UpdateStopWords(t *testing.T) {
 			name: "TestIndexBasicUpdateStopWords",
 			args: args{
 				UID:    "indexUID",
-				client: defaultClient,
+				client: meili,
 				request: []string{
 					"of", "the", "to",
 				},
@@ -2445,7 +2849,7 @@ func TestIndex_UpdateStopWords(t *testing.T) {
 			name: "TestIndexUpdateStopWordsWithCustomClient",
 			args: args{
 				UID:    "indexUID",
-				client: customClient,
+				client: customMeili,
 				request: []string{
 					"of", "the", "to",
 				},
@@ -2457,7 +2861,7 @@ func TestIndex_UpdateStopWords(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			SetUpIndexForFaceting()
+			setUpIndexForFaceting(tt.args.client)
 			c := tt.args.client
 			i := c.Index(tt.args.UID)
 			t.Cleanup(cleanup(c))
@@ -2479,9 +2883,14 @@ func TestIndex_UpdateStopWords(t *testing.T) {
 }
 
 func TestIndex_UpdateSynonyms(t *testing.T) {
+	meili := setup(t, "")
+	customMeili := setup(t, "", WithCustomClientWithTLS(&tls.Config{
+		InsecureSkipVerify: true,
+	}))
+
 	type args struct {
 		UID     string
-		client  *Client
+		client  ServiceManager
 		request map[string][]string
 	}
 	tests := []struct {
@@ -2493,7 +2902,7 @@ func TestIndex_UpdateSynonyms(t *testing.T) {
 			name: "TestIndexBasicUpdateSynonyms",
 			args: args{
 				UID:    "indexUID",
-				client: defaultClient,
+				client: meili,
 				request: map[string][]string{
 					"wolverine": {"logan", "xmen"},
 				},
@@ -2506,7 +2915,7 @@ func TestIndex_UpdateSynonyms(t *testing.T) {
 			name: "TestIndexUpdateSynonymsWithCustomClient",
 			args: args{
 				UID:    "indexUID",
-				client: customClient,
+				client: customMeili,
 				request: map[string][]string{
 					"wolverine": {"logan", "xmen"},
 				},
@@ -2518,7 +2927,7 @@ func TestIndex_UpdateSynonyms(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			SetUpIndexForFaceting()
+			setUpIndexForFaceting(tt.args.client)
 			c := tt.args.client
 			i := c.Index(tt.args.UID)
 			t.Cleanup(cleanup(c))
@@ -2540,9 +2949,14 @@ func TestIndex_UpdateSynonyms(t *testing.T) {
 }
 
 func TestIndex_UpdateSortableAttributes(t *testing.T) {
+	meili := setup(t, "")
+	customMeili := setup(t, "", WithCustomClientWithTLS(&tls.Config{
+		InsecureSkipVerify: true,
+	}))
+
 	type args struct {
 		UID     string
-		client  *Client
+		client  ServiceManager
 		request []string
 	}
 	tests := []struct {
@@ -2554,7 +2968,7 @@ func TestIndex_UpdateSortableAttributes(t *testing.T) {
 			name: "TestIndexBasicUpdateSortableAttributes",
 			args: args{
 				UID:    "indexUID",
-				client: defaultClient,
+				client: meili,
 				request: []string{
 					"title",
 				},
@@ -2567,7 +2981,7 @@ func TestIndex_UpdateSortableAttributes(t *testing.T) {
 			name: "TestIndexUpdateSortableAttributesWithCustomClient",
 			args: args{
 				UID:    "indexUID",
-				client: customClient,
+				client: customMeili,
 				request: []string{
 					"title",
 				},
@@ -2579,7 +2993,7 @@ func TestIndex_UpdateSortableAttributes(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			SetUpIndexForFaceting()
+			setUpIndexForFaceting(tt.args.client)
 			c := tt.args.client
 			i := c.Index(tt.args.UID)
 			t.Cleanup(cleanup(c))
@@ -2601,9 +3015,14 @@ func TestIndex_UpdateSortableAttributes(t *testing.T) {
 }
 
 func TestIndex_UpdateTypoTolerance(t *testing.T) {
+	meili := setup(t, "")
+	customMeili := setup(t, "", WithCustomClientWithTLS(&tls.Config{
+		InsecureSkipVerify: true,
+	}))
+
 	type args struct {
 		UID     string
-		client  *Client
+		client  ServiceManager
 		request TypoTolerance
 	}
 	tests := []struct {
@@ -2616,7 +3035,7 @@ func TestIndex_UpdateTypoTolerance(t *testing.T) {
 			name: "TestIndexBasicUpdateTypoTolerance",
 			args: args{
 				UID:    "indexUID",
-				client: defaultClient,
+				client: meili,
 				request: TypoTolerance{
 					Enabled: true,
 					MinWordSizeForTypos: MinWordSizeForTypos{
@@ -2636,7 +3055,7 @@ func TestIndex_UpdateTypoTolerance(t *testing.T) {
 			name: "TestIndexUpdateTypoToleranceWithCustomClient",
 			args: args{
 				UID:    "indexUID",
-				client: customClient,
+				client: customMeili,
 				request: TypoTolerance{
 					Enabled: true,
 					MinWordSizeForTypos: MinWordSizeForTypos{
@@ -2656,7 +3075,7 @@ func TestIndex_UpdateTypoTolerance(t *testing.T) {
 			name: "TestIndexUpdateTypoToleranceWithDisableOnWords",
 			args: args{
 				UID:    "indexUID",
-				client: defaultClient,
+				client: meili,
 				request: TypoTolerance{
 					Enabled: true,
 					MinWordSizeForTypos: MinWordSizeForTypos{
@@ -2678,7 +3097,7 @@ func TestIndex_UpdateTypoTolerance(t *testing.T) {
 			name: "TestIndexUpdateTypoToleranceWithDisableOnAttributes",
 			args: args{
 				UID:    "indexUID",
-				client: defaultClient,
+				client: meili,
 				request: TypoTolerance{
 					Enabled: true,
 					MinWordSizeForTypos: MinWordSizeForTypos{
@@ -2696,24 +3115,42 @@ func TestIndex_UpdateTypoTolerance(t *testing.T) {
 			},
 			wantResp: &defaultTypoTolerance,
 		},
+		{
+			name: "TestIndexDisableTypoTolerance",
+			args: args{
+				UID:    "indexUID",
+				client: meili,
+				request: TypoTolerance{
+					Enabled: false,
+					MinWordSizeForTypos: MinWordSizeForTypos{
+						OneTypo:  5,
+						TwoTypos: 9,
+					},
+					DisableOnWords:      []string{},
+					DisableOnAttributes: []string{},
+				},
+			},
+			wantTask: &TaskInfo{
+				TaskUID: 1,
+			},
+			wantResp: &TypoTolerance{
+				Enabled: false,
+			},
+		},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			SetUpIndexForFaceting()
+			setUpIndexForFaceting(tt.args.client)
 			c := tt.args.client
 			i := c.Index(tt.args.UID)
 			t.Cleanup(cleanup(c))
-
-			gotResp, err := i.GetTypoTolerance()
-			require.NoError(t, err)
-			require.Equal(t, tt.wantResp, gotResp)
 
 			gotTask, err := i.UpdateTypoTolerance(&tt.args.request)
 			require.NoError(t, err)
 			require.GreaterOrEqual(t, gotTask.TaskUID, tt.wantTask.TaskUID)
 			testWaitForTask(t, i, gotTask)
 
-			gotResp, err = i.GetTypoTolerance()
+			gotResp, err := i.GetTypoTolerance()
 			require.NoError(t, err)
 			require.Equal(t, &tt.args.request, gotResp)
 		})
@@ -2721,9 +3158,14 @@ func TestIndex_UpdateTypoTolerance(t *testing.T) {
 }
 
 func TestIndex_UpdatePagination(t *testing.T) {
+	meili := setup(t, "")
+	customMeili := setup(t, "", WithCustomClientWithTLS(&tls.Config{
+		InsecureSkipVerify: true,
+	}))
+
 	type args struct {
 		UID     string
-		client  *Client
+		client  ServiceManager
 		request Pagination
 	}
 	tests := []struct {
@@ -2736,7 +3178,7 @@ func TestIndex_UpdatePagination(t *testing.T) {
 			name: "TestIndexBasicUpdatePagination",
 			args: args{
 				UID:    "indexUID",
-				client: defaultClient,
+				client: meili,
 				request: Pagination{
 					MaxTotalHits: 1200,
 				},
@@ -2750,7 +3192,7 @@ func TestIndex_UpdatePagination(t *testing.T) {
 			name: "TestIndexUpdatePaginationWithCustomClient",
 			args: args{
 				UID:    "indexUID",
-				client: customClient,
+				client: customMeili,
 				request: Pagination{
 					MaxTotalHits: 1200,
 				},
@@ -2763,7 +3205,7 @@ func TestIndex_UpdatePagination(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			SetUpIndexForFaceting()
+			setUpIndexForFaceting(tt.args.client)
 			c := tt.args.client
 			i := c.Index(tt.args.UID)
 			t.Cleanup(cleanup(c))
@@ -2785,9 +3227,14 @@ func TestIndex_UpdatePagination(t *testing.T) {
 }
 
 func TestIndex_UpdateFaceting(t *testing.T) {
+	meili := setup(t, "")
+	customMeili := setup(t, "", WithCustomClientWithTLS(&tls.Config{
+		InsecureSkipVerify: true,
+	}))
+
 	type args struct {
 		UID     string
-		client  *Client
+		client  ServiceManager
 		request Faceting
 	}
 	tests := []struct {
@@ -2800,9 +3247,12 @@ func TestIndex_UpdateFaceting(t *testing.T) {
 			name: "TestIndexBasicUpdateFaceting",
 			args: args{
 				UID:    "indexUID",
-				client: defaultClient,
+				client: meili,
 				request: Faceting{
 					MaxValuesPerFacet: 200,
+					SortFacetValuesBy: map[string]SortFacetType{
+						"*": SortFacetTypeAlpha,
+					},
 				},
 			},
 			wantTask: &TaskInfo{
@@ -2814,9 +3264,12 @@ func TestIndex_UpdateFaceting(t *testing.T) {
 			name: "TestIndexUpdateFacetingWithCustomClient",
 			args: args{
 				UID:    "indexUID",
-				client: customClient,
+				client: customMeili,
 				request: Faceting{
 					MaxValuesPerFacet: 200,
+					SortFacetValuesBy: map[string]SortFacetType{
+						"*": SortFacetTypeAlpha,
+					},
 				},
 			},
 			wantTask: &TaskInfo{
@@ -2824,26 +3277,413 @@ func TestIndex_UpdateFaceting(t *testing.T) {
 			},
 			wantResp: &defaultFaceting,
 		},
+		{
+			name: "TestIndexGetStartedFaceting",
+			args: args{
+				UID:    "indexUID",
+				client: meili,
+				request: Faceting{
+					MaxValuesPerFacet: 2,
+					SortFacetValuesBy: map[string]SortFacetType{
+						"*": SortFacetTypeCount,
+					},
+				},
+			},
+			wantTask: &TaskInfo{
+				TaskUID: 1,
+			},
+			wantResp: &Faceting{
+				MaxValuesPerFacet: 2,
+				SortFacetValuesBy: map[string]SortFacetType{
+					"*": SortFacetTypeCount,
+				},
+			},
+		},
+		{
+			name: "TestIndexSortFacetValuesByCountFaceting",
+			args: args{
+				UID:    "indexUID",
+				client: meili,
+				request: Faceting{
+					SortFacetValuesBy: map[string]SortFacetType{
+						"*":        SortFacetTypeAlpha,
+						"indexUID": SortFacetTypeCount,
+					},
+				},
+			},
+			wantTask: &TaskInfo{
+				TaskUID: 1,
+			},
+			wantResp: &Faceting{
+				SortFacetValuesBy: map[string]SortFacetType{
+					"*":        SortFacetTypeAlpha,
+					"indexUID": SortFacetTypeCount,
+				},
+			},
+		},
+		{
+			name: "TestIndexSortFacetValuesAllIndexFaceting",
+			args: args{
+				UID:    "indexUID",
+				client: meili,
+				request: Faceting{
+					SortFacetValuesBy: map[string]SortFacetType{
+						"*": SortFacetTypeCount,
+					},
+				},
+			},
+			wantTask: &TaskInfo{
+				TaskUID: 1,
+			},
+			wantResp: &Faceting{
+				SortFacetValuesBy: map[string]SortFacetType{
+					"*": SortFacetTypeCount,
+				},
+			},
+		},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			SetUpIndexForFaceting()
+			setUpIndexForFaceting(tt.args.client)
 			c := tt.args.client
 			i := c.Index(tt.args.UID)
 			t.Cleanup(cleanup(c))
-
-			gotResp, err := i.GetFaceting()
-			require.NoError(t, err)
-			require.Equal(t, tt.wantResp, gotResp)
 
 			gotTask, err := i.UpdateFaceting(&tt.args.request)
 			require.NoError(t, err)
 			require.GreaterOrEqual(t, gotTask.TaskUID, tt.wantTask.TaskUID)
 			testWaitForTask(t, i, gotTask)
 
-			gotResp, err = i.GetFaceting()
+			gotResp, err := i.GetFaceting()
 			require.NoError(t, err)
 			require.Equal(t, &tt.args.request, gotResp)
 		})
 	}
+}
+
+func TestIndex_UpdateSettingsEmbedders(t *testing.T) {
+	meili := setup(t, "")
+
+	type args struct {
+		UID      string
+		client   ServiceManager
+		request  Settings
+		newIndex bool
+	}
+	tests := []struct {
+		name          string
+		args          args
+		wantTask      *TaskInfo
+		wantEmbedders map[string]Embedder
+		wantErr       string
+	}{
+		{
+			name: "TestIndexUpdateSettingsEmbeddersErr",
+			args: args{
+				UID:    "indexUID",
+				client: meili,
+				request: Settings{
+					Embedders: map[string]Embedder{
+						"default": {
+							Source:           "openAi",
+							DocumentTemplate: "{{doc.foobar}}",
+						},
+					},
+				},
+			},
+			wantTask: &TaskInfo{
+				TaskUID: 1,
+			},
+			wantErr: "foobar",
+		},
+		{
+			name: "TestIndexUpdateSettingsEmbeddersErr",
+			args: args{
+				UID:    "indexUID",
+				client: meili,
+				request: Settings{
+					Embedders: map[string]Embedder{
+						"default": {
+							Source:           "openAi",
+							ApiKey:           "xxx",
+							Model:            "text-embedding-ada-002",
+							DocumentTemplate: "A movie titled '{{doc.title}}'",
+						},
+					},
+				},
+			},
+			wantTask: &TaskInfo{
+				TaskUID: 1,
+			},
+			wantErr: "Incorrect API key",
+		},
+		{
+			name: "TestIndexUpdateSettingsEmbeddersUserProvided",
+			args: args{
+				newIndex: true,
+				UID:      "newIndexUID",
+				client:   meili,
+				request: Settings{
+					Embedders: map[string]Embedder{
+						"default": {
+							Source:     "userProvided",
+							Dimensions: 3,
+						},
+					},
+				},
+			},
+			wantTask: &TaskInfo{
+				TaskUID: 1,
+			},
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			c := tt.args.client
+			i, err := setUpIndexWithVector(c.(*meilisearch), tt.args.UID)
+			require.NoError(t, err)
+			t.Cleanup(cleanup(c))
+
+			gotTask, err := i.UpdateSettings(&tt.args.request)
+			require.NoError(t, err)
+			require.GreaterOrEqual(t, gotTask.TaskUID, tt.wantTask.TaskUID)
+			testWaitForTask(t, i, gotTask)
+
+			gotResp, err := i.GetSettings()
+			require.NoError(t, err)
+			require.NotNil(t, gotResp)
+		})
+	}
+}
+
+func TestIndex_GetEmbedders(t *testing.T) {
+	c := setup(t, "")
+	t.Cleanup(cleanup(c))
+
+	indexID := "newIndexUID"
+	i := c.Index(indexID)
+	task, err := c.CreateIndex(&IndexConfig{Uid: indexID})
+	require.NoError(t, err)
+	testWaitForTask(t, i, task)
+
+	expected := map[string]Embedder{
+		"default": {
+			Source:     "userProvided",
+			Dimensions: 3,
+		},
+	}
+	task, err = i.UpdateSettings(&Settings{
+		Embedders: expected,
+	})
+	require.NoError(t, err)
+	testWaitForTask(t, i, task)
+
+	got, err := i.GetEmbedders()
+	require.NoError(t, err)
+	require.Equal(t, expected, got)
+}
+
+func TestIndex_UpdateEmbedders(t *testing.T) {
+	c := setup(t, "")
+	t.Cleanup(cleanup(c))
+
+	indexID := "newIndexUID"
+	i := c.Index(indexID)
+	taskInfo, err := c.CreateIndex(&IndexConfig{Uid: indexID})
+	require.NoError(t, err)
+	testWaitForTask(t, i, taskInfo)
+
+	embedders := map[string]Embedder{
+		"someEmbbeder": {
+			Source:     "userProvided",
+			Dimensions: 3,
+		},
+	}
+	taskInfo, err = i.UpdateSettings(&Settings{
+		Embedders: embedders,
+	})
+	require.NoError(t, err)
+	testWaitForTask(t, i, taskInfo)
+
+	updated := map[string]Embedder{
+		"someEmbbeder": {
+			Source:     "userProvided",
+			Dimensions: 5,
+		},
+	}
+
+	taskInfo, err = i.UpdateEmbedders(updated)
+	require.NoError(t, err)
+	task, err := i.WaitForTask(taskInfo.TaskUID, 0)
+	require.NoError(t, err)
+	require.Equal(t, TaskStatusSucceeded, task.Status)
+
+	got, err := i.GetEmbedders()
+	require.NoError(t, err)
+	require.Equal(t, updated, got)
+}
+
+func TestIndex_ResetEmbedders(t *testing.T) {
+	c := setup(t, "")
+	t.Cleanup(cleanup(c))
+
+	indexID := "newIndexUID"
+	i := c.Index(indexID)
+	taskInfo, err := c.CreateIndex(&IndexConfig{Uid: indexID})
+	require.NoError(t, err)
+	testWaitForTask(t, i, taskInfo)
+
+	taskInfo, err = i.UpdateSettings(&Settings{
+		Embedders: map[string]Embedder{
+			"default": {
+				Source:     "userProvided",
+				Dimensions: 3,
+			},
+		},
+	})
+	require.NoError(t, err)
+	testWaitForTask(t, i, taskInfo)
+
+	taskInfo, err = i.ResetEmbedders()
+	require.NoError(t, err)
+	task, err := i.WaitForTask(taskInfo.TaskUID, 0)
+	require.NoError(t, err)
+	require.Equal(t, TaskStatusSucceeded, task.Status)
+
+	got, err := i.GetEmbedders()
+	require.NoError(t, err)
+	require.Empty(t, got)
+}
+
+func Test_Dictionary(t *testing.T) {
+	c := setup(t, "")
+	t.Cleanup(cleanup(c))
+
+	indexID := "newIndexUID"
+	i := c.Index(indexID)
+
+	words := []string{"J. R. R.", "W. E. B."}
+
+	task, err := i.UpdateDictionary(words)
+	require.NoError(t, err)
+	testWaitForTask(t, i, task)
+
+	got, err := i.GetDictionary()
+	require.NoError(t, err)
+	require.Equal(t, words, got)
+
+	task, err = i.ResetDictionary()
+	require.NoError(t, err)
+	testWaitForTask(t, i, task)
+
+	got, err = i.GetDictionary()
+	require.NoError(t, err)
+	require.Equal(t, got, []string{})
+}
+
+func Test_SearchCutoffMs(t *testing.T) {
+	c := setup(t, "")
+	t.Cleanup(cleanup(c))
+
+	indexID := "newIndexUID"
+	i := c.Index(indexID)
+	taskInfo, err := c.CreateIndex(&IndexConfig{Uid: indexID})
+	require.NoError(t, err)
+	testWaitForTask(t, i, taskInfo)
+
+	n := int64(250)
+
+	task, err := i.UpdateSearchCutoffMs(n)
+	require.NoError(t, err)
+	testWaitForTask(t, i, task)
+
+	got, err := i.GetSearchCutoffMs()
+	require.NoError(t, err)
+	require.Equal(t, n, got)
+
+	task, err = i.ResetSearchCutoffMs()
+	require.NoError(t, err)
+	testWaitForTask(t, i, task)
+
+	got, err = i.GetSearchCutoffMs()
+	require.NoError(t, err)
+	require.Equal(t, int64(0), got)
+}
+
+func Test_SeparatorTokens(t *testing.T) {
+	c := setup(t, "")
+
+	indexID := "newIndexUID"
+	i := c.Index(indexID)
+
+	tokens := []string{"|", "&hellip;"}
+
+	task, err := i.UpdateSeparatorTokens(tokens)
+	require.NoError(t, err)
+	testWaitForTask(t, i, task)
+
+	got, err := i.GetSeparatorTokens()
+	require.NoError(t, err)
+	require.ElementsMatchf(t, tokens, got, "tokens is not match with got")
+
+	task, err = i.ResetSeparatorTokens()
+	require.NoError(t, err)
+	testWaitForTask(t, i, task)
+
+	got, err = i.GetSeparatorTokens()
+	require.NoError(t, err)
+	require.Equal(t, got, []string{})
+}
+
+func Test_NonSeparatorTokens(t *testing.T) {
+	c := setup(t, "")
+
+	indexID := "newIndexUID"
+	i := c.Index(indexID)
+
+	tokens := []string{"@", "#"}
+
+	task, err := i.UpdateNonSeparatorTokens(tokens)
+	require.NoError(t, err)
+	testWaitForTask(t, i, task)
+
+	got, err := i.GetNonSeparatorTokens()
+	require.NoError(t, err)
+	require.ElementsMatchf(t, tokens, got, "tokens is not match with got")
+
+	task, err = i.ResetNonSeparatorTokens()
+	require.NoError(t, err)
+	testWaitForTask(t, i, task)
+
+	got, err = i.GetNonSeparatorTokens()
+	require.NoError(t, err)
+	require.Equal(t, got, []string{})
+}
+
+func Test_ProximityPrecision(t *testing.T) {
+	c := setup(t, "")
+	t.Cleanup(cleanup(c))
+
+	indexID := "newIndexUID"
+	i := c.Index(indexID)
+
+	got, err := i.GetProximityPrecision()
+	require.NoError(t, err)
+	require.Equal(t, ByWord, got)
+
+	task, err := i.UpdateProximityPrecision(ByAttribute)
+	require.NoError(t, err)
+	testWaitForTask(t, i, task)
+
+	got, err = i.GetProximityPrecision()
+	require.NoError(t, err)
+	require.Equal(t, ByAttribute, got)
+
+	task, err = i.ResetProximityPrecision()
+	require.NoError(t, err)
+	testWaitForTask(t, i, task)
+
+	got, err = i.GetProximityPrecision()
+	require.NoError(t, err)
+	require.Equal(t, ByWord, got)
 }

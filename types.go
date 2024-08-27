@@ -4,34 +4,37 @@ import (
 	"time"
 
 	"github.com/golang-jwt/jwt/v4"
-	"github.com/valyala/fasthttp"
 )
 
-//
-// Internal types to Meilisearch
-//
+const (
+	DefaultLimit int64 = 20
 
-// Client is a structure that give you the power for interacting with an high-level api with Meilisearch.
-type Client struct {
-	config     ClientConfig
-	httpClient *fasthttp.Client
+	contentTypeJSON   string = "application/json"
+	contentTypeNDJSON string = "application/x-ndjson"
+	contentTypeCSV    string = "text/csv"
+)
+
+type IndexConfig struct {
+	// Uid is the unique identifier of a given index.
+	Uid string
+	// PrimaryKey is optional
+	PrimaryKey string
 }
 
-// Index is the type that represent an index in Meilisearch
-type Index struct {
+type IndexResult struct {
 	UID        string    `json:"uid"`
 	CreatedAt  time.Time `json:"createdAt"`
 	UpdatedAt  time.Time `json:"updatedAt"`
 	PrimaryKey string    `json:"primaryKey,omitempty"`
-	client     *Client
+	IndexManager
 }
 
-// Return of multiple indexes is wrap in a IndexesResults
+// IndexesResults return of multiple indexes is wrap in a IndexesResults
 type IndexesResults struct {
-	Results []Index `json:"results"`
-	Offset  int64   `json:"offset"`
-	Limit   int64   `json:"limit"`
-	Total   int64   `json:"total"`
+	Results []*IndexResult `json:"results"`
+	Offset  int64          `json:"offset"`
+	Limit   int64          `json:"limit"`
+	Total   int64          `json:"total"`
 }
 
 type IndexesQuery struct {
@@ -39,53 +42,69 @@ type IndexesQuery struct {
 	Offset int64
 }
 
-// Settings is the type that represents the settings in Meilisearch
+// Settings is the type that represents the settings in meilisearch
 type Settings struct {
-	RankingRules         []string            `json:"rankingRules,omitempty"`
-	DistinctAttribute    *string             `json:"distinctAttribute,omitempty"`
-	SearchableAttributes []string            `json:"searchableAttributes,omitempty"`
-	DisplayedAttributes  []string            `json:"displayedAttributes,omitempty"`
-	StopWords            []string            `json:"stopWords,omitempty"`
-	Synonyms             map[string][]string `json:"synonyms,omitempty"`
-	FilterableAttributes []string            `json:"filterableAttributes,omitempty"`
-	SortableAttributes   []string            `json:"sortableAttributes,omitempty"`
-	TypoTolerance        *TypoTolerance      `json:"typoTolerance,omitempty"`
-	Pagination           *Pagination         `json:"pagination,omitempty"`
-	Faceting             *Faceting           `json:"faceting,omitempty"`
+	RankingRules         []string               `json:"rankingRules,omitempty"`
+	DistinctAttribute    *string                `json:"distinctAttribute,omitempty"`
+	SearchableAttributes []string               `json:"searchableAttributes,omitempty"`
+	Dictionary           []string               `json:"dictionary,omitempty"`
+	SearchCutoffMs       int64                  `json:"searchCutoffMs,omitempty"`
+	ProximityPrecision   ProximityPrecisionType `json:"proximityPrecision,omitempty"`
+	SeparatorTokens      []string               `json:"separatorTokens,omitempty"`
+	NonSeparatorTokens   []string               `json:"nonSeparatorTokens,omitempty"`
+	DisplayedAttributes  []string               `json:"displayedAttributes,omitempty"`
+	StopWords            []string               `json:"stopWords,omitempty"`
+	Synonyms             map[string][]string    `json:"synonyms,omitempty"`
+	FilterableAttributes []string               `json:"filterableAttributes,omitempty"`
+	SortableAttributes   []string               `json:"sortableAttributes,omitempty"`
+	TypoTolerance        *TypoTolerance         `json:"typoTolerance,omitempty"`
+	Pagination           *Pagination            `json:"pagination,omitempty"`
+	Faceting             *Faceting              `json:"faceting,omitempty"`
+	Embedders            map[string]Embedder    `json:"embedders,omitempty"`
 }
 
-// TypoTolerance is the type that represents the typo tolerance setting in Meilisearch
+// TypoTolerance is the type that represents the typo tolerance setting in meilisearch
 type TypoTolerance struct {
-	Enabled             bool                `json:"enabled,omitempty"`
+	Enabled             bool                `json:"enabled"`
 	MinWordSizeForTypos MinWordSizeForTypos `json:"minWordSizeForTypos,omitempty"`
 	DisableOnWords      []string            `json:"disableOnWords,omitempty"`
 	DisableOnAttributes []string            `json:"disableOnAttributes,omitempty"`
 }
 
-// MinWordSizeForTypos is the type that represents the minWordSizeForTypos setting in the typo tolerance setting in Meilisearch
+// MinWordSizeForTypos is the type that represents the minWordSizeForTypos setting in the typo tolerance setting in meilisearch
 type MinWordSizeForTypos struct {
 	OneTypo  int64 `json:"oneTypo,omitempty"`
 	TwoTypos int64 `json:"twoTypos,omitempty"`
 }
 
-// Pagination is the type that represents the pagination setting in Meilisearch
+// Pagination is the type that represents the pagination setting in meilisearch
 type Pagination struct {
 	MaxTotalHits int64 `json:"maxTotalHits"`
 }
 
-// Faceting is the type that represents the faceting setting in Meilisearch
+// Faceting is the type that represents the faceting setting in meilisearch
 type Faceting struct {
 	MaxValuesPerFacet int64 `json:"maxValuesPerFacet"`
+	// SortFacetValuesBy index_name: alpha|count
+	SortFacetValuesBy map[string]SortFacetType `json:"sortFacetValuesBy"`
 }
 
-// Version is the type that represents the versions in Meilisearch
+type Embedder struct {
+	Source           string `json:"source"`
+	ApiKey           string `json:"apiKey,omitempty"`
+	Model            string `json:"model,omitempty"`
+	Dimensions       int    `json:"dimensions,omitempty"`
+	DocumentTemplate string `json:"documentTemplate,omitempty"`
+}
+
+// Version is the type that represents the versions in meilisearch
 type Version struct {
 	CommitSha  string `json:"commitSha"`
 	CommitDate string `json:"commitDate"`
 	PkgVersion string `json:"pkgVersion"`
 }
 
-// StatsIndex is the type that represent the stats of an index in Meilisearch
+// StatsIndex is the type that represent the stats of an index in meilisearch
 type StatsIndex struct {
 	NumberOfDocuments int64            `json:"numberOfDocuments"`
 	IsIndexing        bool             `json:"isIndexing"`
@@ -99,8 +118,37 @@ type Stats struct {
 	Indexes      map[string]StatsIndex `json:"indexes"`
 }
 
-// TaskStatus is the status of a task.
-type TaskStatus string
+type (
+	TaskType               string // TaskType is the type of a task
+	SortFacetType          string // SortFacetType is type of facet sorting, alpha or count
+	TaskStatus             string // TaskStatus is the status of a task.
+	ProximityPrecisionType string // ProximityPrecisionType accepts one of the ByWord or ByAttribute
+	MatchingStrategy       string // MatchingStrategy one of the Last, All, Frequency
+)
+
+const (
+	// Last returns documents containing all the query terms first. If there are not enough results containing all
+	// query terms to meet the requested limit, Meilisearch will remove one query term at a time,
+	// starting from the end of the query.
+	Last MatchingStrategy = "last"
+	// All only returns documents that contain all query terms. Meilisearch will not match any more documents even
+	// if there aren't enough to meet the requested limit.
+	All MatchingStrategy = "all"
+	// Frequency returns documents containing all the query terms first. If there are not enough results containing
+	//all query terms to meet the requested limit, Meilisearch will remove one query term at a time, starting
+	//with the word that is the most frequent in the dataset. frequency effectively gives more weight to terms
+	//that appear less frequently in a set of results.
+	Frequency MatchingStrategy = "frequency"
+)
+
+const (
+	// ByWord calculate the precise distance between query terms. Higher precision, but may lead to longer
+	// indexing time. This is the default setting
+	ByWord ProximityPrecisionType = "byWord"
+	// ByAttribute determine if multiple query terms are present in the same attribute.
+	// Lower precision, but shorter indexing time
+	ByAttribute ProximityPrecisionType = "byAttribute"
+)
 
 const (
 	// TaskStatusUnknown is the default TaskStatus, should not exist
@@ -113,6 +161,38 @@ const (
 	TaskStatusSucceeded TaskStatus = "succeeded"
 	// TaskStatusFailed a failure occurred when processing the task, no changes were made to the database
 	TaskStatusFailed TaskStatus = "failed"
+	// TaskStatusCanceled the task was canceled
+	TaskStatusCanceled TaskStatus = "canceled"
+)
+
+const (
+	SortFacetTypeAlpha SortFacetType = "alpha"
+	SortFacetTypeCount SortFacetType = "count"
+)
+
+const (
+	// TaskTypeIndexCreation represents an index creation
+	TaskTypeIndexCreation TaskType = "indexCreation"
+	// TaskTypeIndexUpdate represents an index update
+	TaskTypeIndexUpdate TaskType = "indexUpdate"
+	// TaskTypeIndexDeletion represents an index deletion
+	TaskTypeIndexDeletion TaskType = "indexDeletion"
+	// TaskTypeIndexSwap represents an index swap
+	TaskTypeIndexSwap TaskType = "indexSwap"
+	// TaskTypeDocumentAdditionOrUpdate represents a document addition or update in an index
+	TaskTypeDocumentAdditionOrUpdate TaskType = "documentAdditionOrUpdate"
+	// TaskTypeDocumentDeletion represents a document deletion from an index
+	TaskTypeDocumentDeletion TaskType = "documentDeletion"
+	// TaskTypeSettingsUpdate represents a settings update
+	TaskTypeSettingsUpdate TaskType = "settingsUpdate"
+	// TaskTypeDumpCreation represents a dump creation
+	TaskTypeDumpCreation TaskType = "dumpCreation"
+	// TaskTypeTaskCancelation represents a task cancelation
+	TaskTypeTaskCancelation TaskType = "taskCancelation"
+	// TaskTypeTaskDeletion represents a task deletion
+	TaskTypeTaskDeletion TaskType = "taskDeletion"
+	// TaskTypeSnapshotCreation represents a snapshot creation
+	TaskTypeSnapshotCreation TaskType = "snapshotCreation"
 )
 
 // Task indicates information about a task resource
@@ -123,7 +203,7 @@ type Task struct {
 	UID        int64               `json:"uid,omitempty"`
 	TaskUID    int64               `json:"taskUid,omitempty"`
 	IndexUID   string              `json:"indexUid"`
-	Type       string              `json:"type"`
+	Type       TaskType            `json:"type"`
 	Error      meilisearchApiError `json:"error,omitempty"`
 	Duration   string              `json:"duration,omitempty"`
 	EnqueuedAt time.Time           `json:"enqueuedAt"`
@@ -140,7 +220,7 @@ type TaskInfo struct {
 	Status     TaskStatus `json:"status"`
 	TaskUID    int64      `json:"taskUid"`
 	IndexUID   string     `json:"indexUid"`
-	Type       string     `json:"type"`
+	Type       TaskType   `json:"type"`
 	EnqueuedAt time.Time  `json:"enqueuedAt"`
 }
 
@@ -150,8 +230,8 @@ type TasksQuery struct {
 	Limit            int64
 	From             int64
 	IndexUIDS        []string
-	Statuses         []string
-	Types            []string
+	Statuses         []TaskStatus
+	Types            []TaskType
 	CanceledBy       []int64
 	BeforeEnqueuedAt time.Time
 	AfterEnqueuedAt  time.Time
@@ -165,8 +245,8 @@ type TasksQuery struct {
 type CancelTasksQuery struct {
 	UIDS             []int64
 	IndexUIDS        []string
-	Statuses         []string
-	Types            []string
+	Statuses         []TaskStatus
+	Types            []TaskType
 	BeforeEnqueuedAt time.Time
 	AfterEnqueuedAt  time.Time
 	BeforeStartedAt  time.Time
@@ -177,8 +257,8 @@ type CancelTasksQuery struct {
 type DeleteTasksQuery struct {
 	UIDS             []int64
 	IndexUIDS        []string
-	Statuses         []string
-	Types            []string
+	Statuses         []TaskStatus
+	Types            []TaskType
 	CanceledBy       []int64
 	BeforeEnqueuedAt time.Time
 	AfterEnqueuedAt  time.Time
@@ -210,9 +290,10 @@ type Details struct {
 	DeletedTasks         int64               `json:"deletedTasks,omitempty"`
 	OriginalFilter       string              `json:"originalFilter,omitempty"`
 	Swaps                []SwapIndexesParams `json:"swaps,omitempty"`
+	DumpUid              string              `json:"dumpUid,omitempty"`
 }
 
-// Return of multiple tasks is wrap in a TaskResult
+// TaskResult return of multiple tasks is wrap in a TaskResult
 type TaskResult struct {
 	Results []Task `json:"results"`
 	Limit   int64  `json:"limit"`
@@ -221,7 +302,7 @@ type TaskResult struct {
 	Total   int64  `json:"total"`
 }
 
-// Keys allow the user to connect to the Meilisearch instance
+// Key allow the user to connect to the meilisearch instance
 //
 // Documentation: https://www.meilisearch.com/docs/learn/security/master_api_keys#protecting-a-meilisearch-instance
 type Key struct {
@@ -236,7 +317,7 @@ type Key struct {
 	ExpiresAt   time.Time `json:"expiresAt"`
 }
 
-// This structure is used to send the exact ISO-8601 time format managed by Meilisearch
+// KeyParsed this structure is used to send the exact ISO-8601 time format managed by meilisearch
 type KeyParsed struct {
 	Name        string   `json:"name"`
 	Description string   `json:"description"`
@@ -246,13 +327,13 @@ type KeyParsed struct {
 	ExpiresAt   *string  `json:"expiresAt"`
 }
 
-// This structure is used to update a Key
+// KeyUpdate this structure is used to update a Key
 type KeyUpdate struct {
 	Name        string `json:"name,omitempty"`
 	Description string `json:"description,omitempty"`
 }
 
-// Return of multiple keys is wrap in a KeysResults
+// KeysResults return of multiple keys is wrap in a KeysResults
 type KeysResults struct {
 	Results []Key `json:"results"`
 	Offset  int64 `json:"offset"`
@@ -265,7 +346,7 @@ type KeysQuery struct {
 	Offset int64
 }
 
-// Information to create a tenant token
+// TenantTokenOptions information to create a tenant token
 //
 // ExpiresAt is a time.Time when the key will expire.
 // Note that if an ExpiresAt value is included it should be in UTC time.
@@ -275,7 +356,7 @@ type TenantTokenOptions struct {
 	ExpiresAt time.Time
 }
 
-// Custom Claims structure to create a Tenant Token
+// TenantTokenClaims custom Claims structure to create a Tenant Token
 type TenantTokenClaims struct {
 	APIKeyUID   string      `json:"apiKeyUid"`
 	SearchRules interface{} `json:"searchRules"`
@@ -297,31 +378,41 @@ type CreateIndexRequest struct {
 //
 // Documentation: https://www.meilisearch.com/docs/reference/api/search#search-parameters
 type SearchRequest struct {
-	Offset                int64
-	Limit                 int64
-	AttributesToRetrieve  []string
-	AttributesToSearchOn  []string
-	AttributesToCrop      []string
-	CropLength            int64
-	CropMarker            string
-	AttributesToHighlight []string
-	HighlightPreTag       string
-	HighlightPostTag      string
-	MatchingStrategy      string
-	Filter                interface{}
-	ShowMatchesPosition   bool
-	ShowRankingScore      bool
-	Facets                []string
-	PlaceholderSearch     bool
-	Sort                  []string
-	HitsPerPage           int64
-	Page                  int64
-	IndexUID              string
-	Query                 string
+	Offset                  int64                `json:"offset,omitempty"`
+	Limit                   int64                `json:"limit,omitempty"`
+	AttributesToRetrieve    []string             `json:"attributesToRetrieve,omitempty"`
+	AttributesToSearchOn    []string             `json:"attributesToSearchOn,omitempty"`
+	AttributesToCrop        []string             `json:"attributesToCrop,omitempty"`
+	CropLength              int64                `json:"cropLength,omitempty"`
+	CropMarker              string               `json:"cropMarker,omitempty"`
+	AttributesToHighlight   []string             `json:"attributesToHighlight,omitempty"`
+	HighlightPreTag         string               `json:"highlightPreTag,omitempty"`
+	HighlightPostTag        string               `json:"highlightPostTag,omitempty"`
+	MatchingStrategy        MatchingStrategy     `json:"matchingStrategy,omitempty"`
+	Filter                  interface{}          `json:"filter,omitempty"`
+	ShowMatchesPosition     bool                 `json:"showMatchesPosition,omitempty"`
+	ShowRankingScore        bool                 `json:"showRankingScore,omitempty"`
+	ShowRankingScoreDetails bool                 `json:"showRankingScoreDetails,omitempty"`
+	Facets                  []string             `json:"facets,omitempty"`
+	Sort                    []string             `json:"sort,omitempty"`
+	Vector                  []float32            `json:"vector,omitempty"`
+	HitsPerPage             int64                `json:"hitsPerPage,omitempty"`
+	Page                    int64                `json:"page,omitempty"`
+	IndexUID                string               `json:"indexUid,omitempty"`
+	Query                   string               `json:"q"`
+	Distinct                string               `json:"distinct,omitempty"`
+	Hybrid                  *SearchRequestHybrid `json:"hybrid,omitempty"`
+	RetrieveVectors         bool                 `json:"retrieveVectors,omitempty"`
+	RankingScoreThreshold   float64              `json:"rankingScoreThreshold,omitempty"`
+}
+
+type SearchRequestHybrid struct {
+	SemanticRatio float64 `json:"semanticRatio,omitempty"`
+	Embedder      string  `json:"embedder,omitempty"`
 }
 
 type MultiSearchRequest struct {
-	Queries []SearchRequest `json:"queries"`
+	Queries []*SearchRequest `json:"queries"`
 }
 
 // SearchResponse is the response body for search method
@@ -345,6 +436,21 @@ type MultiSearchResponse struct {
 	Results []SearchResponse `json:"results"`
 }
 
+type FacetSearchRequest struct {
+	FacetName            string   `json:"facetName,omitempty"`
+	FacetQuery           string   `json:"facetQuery,omitempty"`
+	Q                    string   `json:"q,omitempty"`
+	Filter               string   `json:"filter,omitempty"`
+	MatchingStrategy     string   `json:"matchingStrategy,omitempty"`
+	AttributesToSearchOn []string `json:"attributesToSearchOn,omitempty"`
+}
+
+type FacetSearchResponse struct {
+	FacetHits        []interface{} `json:"facetHits"`
+	FacetQuery       string        `json:"facetQuery"`
+	ProcessingTimeMs int64         `json:"processingTimeMs"`
+}
+
 // DocumentQuery is the request body get one documents method
 type DocumentQuery struct {
 	Fields []string `json:"fields,omitempty"`
@@ -356,6 +462,29 @@ type DocumentsQuery struct {
 	Limit  int64       `json:"limit,omitempty"`
 	Fields []string    `json:"fields,omitempty"`
 	Filter interface{} `json:"filter,omitempty"`
+}
+
+// SimilarDocumentQuery is query parameters of similar documents
+type SimilarDocumentQuery struct {
+	Id                      interface{} `json:"id,omitempty"`
+	Embedder                string      `json:"embedder,omitempty"`
+	AttributesToRetrieve    []string    `json:"attributesToRetrieve,omitempty"`
+	Offset                  int64       `json:"offset,omitempty"`
+	Limit                   int64       `json:"limit,omitempty"`
+	Filter                  string      `json:"filter,omitempty"`
+	ShowRankingScore        bool        `json:"showRankingScore,omitempty"`
+	ShowRankingScoreDetails bool        `json:"showRankingScoreDetails,omitempty"`
+	RankingScoreThreshold   float64     `json:"rankingScoreThreshold,omitempty"`
+	RetrieveVectors         bool        `json:"retrieveVectors,omitempty"`
+}
+
+type SimilarDocumentResult struct {
+	Hits               []interface{} `json:"hits,omitempty"`
+	ID                 string        `json:"id,omitempty"`
+	ProcessingTimeMS   int64         `json:"processingTimeMs,omitempty"`
+	Limit              int64         `json:"limit,omitempty"`
+	Offset             int64         `json:"offset,omitempty"`
+	EstimatedTotalHits int64         `json:"estimatedTotalHits,omitempty"`
 }
 
 type CsvDocumentsQuery struct {
@@ -377,7 +506,7 @@ type SwapIndexesParams struct {
 // RawType is an alias for raw byte[]
 type RawType []byte
 
-// Health is the request body for set Meilisearch health
+// Health is the request body for set meilisearch health
 type Health struct {
 	Status string `json:"status"`
 }
@@ -399,4 +528,13 @@ func (b *RawType) UnmarshalJSON(data []byte) error {
 // MarshalJSON supports json.Marshaler interface
 func (b RawType) MarshalJSON() ([]byte, error) {
 	return b, nil
+}
+
+func (s *SearchRequest) validate() {
+	if s.Limit == 0 {
+		s.Limit = DefaultLimit
+	}
+	if s.Hybrid != nil && s.Hybrid.Embedder == "" {
+		s.Hybrid.Embedder = "default"
+	}
 }
